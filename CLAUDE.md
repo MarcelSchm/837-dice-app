@@ -192,9 +192,9 @@ suggestion, adjustable in the app - see open questions):
 
 ## Build & development
 
-- Local project path: `C:\Repo\837 Würfel App` (folder name predates the
-  rename to "837 Dice"; renaming the folder would break Android Studio and
-  CI is unaffected since the checkout path on CI is ASCII anyway).
+- Local project path: `C:\Repo\837-dice` (renamed from the original
+  `C:\Repo\837 Würfel App` once the app itself was renamed to "837 Dice";
+  the new path is plain ASCII, no spaces).
 - Build without Android Studio (PowerShell):
   `$env:JAVA_HOME = 'C:\Program Files\Android\Android Studio\jbr'`
   then `.\gradlew.bat test assembleDebug`
@@ -203,15 +203,6 @@ suggestion, adjustable in the app - see open questions):
   (`DiceRulesTest`, `GameFlowTest`) - when rules change, adapt tests first.
 - Core logic is Android-free in `domain\` (`DiceRules`, `GameFlow`,
   `MenuSeed`); UI in `ui\` (Compose, `RollViewModel`).
-- **Windows quirk - do not remove:** `gradle.properties` contains
-  `-Dfile.encoding=windows-1252` (org.gradle.jvmargs) and
-  `android.overridePathCheck=true`. Without both, local builds fail because
-  of the "ü" in the project path (unit tests die with ClassNotFoundException
-  since the Java launcher reads Gradle's worker argfile with the native
-  Windows encoding). Harmless on Linux/CI.
-- PowerShell 5.1 scripts must not hard-code the project path (ANSI trap) -
-  build it with `[char]0x00FC` or pass paths as parameters. Redirect binary
-  output (e.g. adb screencap) through Bash, not PowerShell.
 - Emulator: AVD "Wuerfel837" (Pixel 7, Android 37.1, display name
   "837 Wuerfel Testgeraet") was created manually under
   `%USERPROFILE%\.android\avd\` and shows up in Android Studio's device
