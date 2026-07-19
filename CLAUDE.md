@@ -16,9 +16,10 @@ real dice, and in the end everyone knows what to order.
 - **App language:** German UI (that's the audience); code, comments and
   docs are English.
 - **Offline-first:** no servers, no accounts, everything stays on the device.
-- **Logo:** `Gyrosbande_5000x5000 transparent.png` (black/white, "837" above
-  a steaming gyros bowl labeled "GYROSBANDE"). Used as the app icon and on
-  the home screen. App color world: black/white with a gold accent.
+- **Logo:** `images/Gyrosbande_5000x5000 transparent.png` (black/white,
+  "837" above a steaming gyros bowl labeled "GYROSBANDE"). Used as the app
+  icon and on the home screen. App color world: black/white with a gold
+  accent.
 
 ## Game rules (the heart of the app)
 
@@ -52,10 +53,10 @@ real dice, and in the end everyone knows what to order.
 
 ## San Remo drinks menu (from the 2026 photos in the project folder)
 
-Source: `WhatsApp Image 2026-07-19 at 16.28.53.jpeg` (wine & spirits) and
-`...16.28.59.jpeg` (drinks menu). This data is the app's **seed data** and
-must be editable in the app (prices/lineup change). Category and drink
-names stay German - they are what's printed on the real menu.
+Source: `images/WhatsApp Image 2026-07-19 at 16.28.53.jpeg` (wine & spirits)
+and `images/...16.28.59.jpeg` (drinks menu). This data is the app's **seed
+data** and must be editable in the app (prices/lineup change). Category and
+drink names stay German - they are what's printed on the real menu.
 
 ### Dice categories
 
@@ -254,3 +255,7 @@ suggestion, adjustable in the app - see open questions):
 - The rules under "Game rules" are binding; when in doubt, ask instead of
   guessing.
 - Always read drink data from the database, never hard-code it in the UI.
+- **All commit messages must follow [Conventional Commits](https://www.conventionalcommits.org/)**
+  (`type: description`, e.g. `feat:`, `fix:`, `docs:`, `refactor:`, `chore:`,
+  `test:`, `ci:`) and be written in English, regardless of the German UI
+  copy. This applies to every commit on this project, not just past ones.
