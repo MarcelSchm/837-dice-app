@@ -238,6 +238,19 @@ Spezialitäten der Karte (Sekt, Grog & Co.) dieser Kategorie zugeschlagen
   „837 Wuerfel Testgeraet") wurde manuell unter `%USERPROFILE%\.android\avd\`
   angelegt und ist in Android Studios Device Manager sichtbar.
 
+### CI/CD (GitHub Actions)
+
+- Workflow `.github/workflows/android.yml`: bei jedem Push auf `main`
+  Tests + Release-APK als Artifact (90 Tage); bei Tags `v*` zusätzlich ein
+  GitHub-Release mit angehängter APK (öffentlich herunterladbar).
+- Signierung: Secrets `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`,
+  `KEY_PASSWORD` → Release-Keystore; ohne Secrets Debug-Signatur-Fallback
+  (Logik in `app/build.gradle.kts`).
+- Keystore + Passwort + Base64 liegen lokal in `C:\Repo\837-wuerfel-signing\`
+  (bewusst außerhalb des Repos, `*.jks` ist gitignored).
+- Neue Version: `versionCode`/`versionName` in `app/build.gradle.kts` erhöhen,
+  committen, `git tag vX.Y && git push origin main vX.Y`.
+
 ### Umsetzungsstand
 
 - ✅ Meilenstein 1–4 (teilweise): Projektgerüst, Würfellogik + Tests,
