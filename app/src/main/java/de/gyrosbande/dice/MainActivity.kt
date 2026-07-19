@@ -1,4 +1,4 @@
-package de.gyrosbande.wuerfel
+package de.gyrosbande.dice
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -12,17 +12,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import de.gyrosbande.wuerfel.ui.HomeScreen
-import de.gyrosbande.wuerfel.ui.RollScreen
-import de.gyrosbande.wuerfel.ui.RollViewModel
-import de.gyrosbande.wuerfel.ui.theme.Wuerfel837Theme
+import de.gyrosbande.dice.ui.HomeScreen
+import de.gyrosbande.dice.ui.RollScreen
+import de.gyrosbande.dice.ui.RollViewModel
+import de.gyrosbande.dice.ui.theme.Dice837Theme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            Wuerfel837Theme {
+            Dice837Theme {
                 val navController = rememberNavController()
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     NavHost(

@@ -1,4 +1,4 @@
-package de.gyrosbande.wuerfel.domain
+package de.gyrosbande.dice.domain
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
@@ -9,18 +9,18 @@ import kotlin.random.Random
 class GameFlowTest {
 
     @Test
-    fun `kompletter Durchgang mit manueller Eingabe`() {
+    fun `complete round with manual entry`() {
         val flow = GameFlow()
         assertEquals(RollPhase.CategoryRoll, flow.phase)
         assertEquals(1, flow.requiredDice())
 
-        // Wurf 1: eine 3 → Bitter
+        // roll 1: a 3 -> Bitter
         flow.enterManual(listOf(3))
         val drinkPhase = flow.phase as RollPhase.DrinkRoll
         assertEquals("Bitter", drinkPhase.category.name)
         assertEquals(1, flow.requiredDice())
 
-        // Wurf 2: eine 3 → Jägermeister
+        // roll 2: a 3 -> Jägermeister
         flow.enterManual(listOf(3))
         val done = flow.phase as RollPhase.Finished
         assertEquals("Jägermeister 35 %", done.outcome.drink.name)
@@ -29,31 +29,31 @@ class GameFlowTest {
     }
 
     @Test
-    fun `Schnaepse brauchen zwei Wuerfel und wrappen`() {
+    fun `schnaps category needs two dice and wraps`() {
         val flow = GameFlow()
-        flow.enterManual(listOf(1)) // Schnäpse & Brände (7 Drinks)
+        flow.enterManual(listOf(1)) // Schnäpse & Brände (7 drinks)
         assertEquals(2, flow.requiredDice())
 
-        flow.enterManual(listOf(4, 5)) // Summe 9 → Wrap → Grappa
+        flow.enterManual(listOf(4, 5)) // sum 9 -> wrap -> Grappa
         val done = flow.phase as RollPhase.Finished
         assertEquals("Grappa 40 %", done.outcome.drink.name)
         assertEquals(9, done.outcome.drinkRollTotal)
     }
 
     @Test
-    fun `falsche Wuerfelanzahl wird abgelehnt`() {
+    fun `wrong dice count is rejected`() {
         val flow = GameFlow()
         assertThrows(IllegalArgumentException::class.java) {
-            flow.enterManual(listOf(1, 2)) // Kategorie-Wurf braucht genau 1
+            flow.enterManual(listOf(1, 2)) // category roll needs exactly 1
         }
         assertThrows(IllegalArgumentException::class.java) {
-            flow.enterManual(listOf(7)) // keine gültige Augenzahl
+            flow.enterManual(listOf(7)) // not a valid pip value
         }
     }
 
     @Test
-    fun `virtueller Durchgang liefert gueltiges Ergebnis`() {
-        // Fester Seed macht den Test deterministisch.
+    fun `virtual round yields a valid outcome`() {
+        // Fixed seed keeps the test deterministic.
         val flow = GameFlow(random = Random(837))
         val categoryDice = flow.rollVirtual()
         assertEquals(1, categoryDice.size)
@@ -67,7 +67,7 @@ class GameFlowTest {
     }
 
     @Test
-    fun `reset startet neuen Durchgang`() {
+    fun `reset starts a new round`() {
         val flow = GameFlow()
         flow.enterManual(listOf(2))
         flow.enterManual(listOf(1))
@@ -78,12 +78,12 @@ class GameFlowTest {
     }
 
     @Test
-    fun `jede Kategorie der Karte ist erreichbar und bespielbar`() {
+    fun `every menu category is reachable and playable`() {
         for (n in 1..6) {
             val flow = GameFlow()
             flow.enterManual(listOf(n))
             val phase = flow.phase as RollPhase.DrinkRoll
-            // Jeder mögliche Wurf muss auf einen Drink zeigen (Wrap-Regel)
+            // every possible roll must point to a drink (wrap rule)
             for (roll in DiceRules.rollRange(phase.diceCount)) {
                 DiceRules.drinkFor(phase.category, roll)
             }

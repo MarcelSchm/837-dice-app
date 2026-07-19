@@ -5,20 +5,20 @@ plugins {
 }
 
 android {
-    namespace = "de.gyrosbande.wuerfel"
+    namespace = "de.gyrosbande.dice"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "de.gyrosbande.wuerfel"
+        applicationId = "de.gyrosbande.dice"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "0.1"
     }
 
-    // CI-Signierung: Wenn die Umgebungsvariablen (GitHub-Secrets) gesetzt sind,
-    // wird mit dem Release-Keystore signiert – sonst mit dem Debug-Key, damit
-    // der Build auch ohne Secrets (Forks, lokal) durchläuft.
+    // CI signing: when the environment variables (GitHub secrets) are set,
+    // the release keystore is used - otherwise the debug key, so the build
+    // also works without secrets (forks, local builds).
     val ciKeystore = System.getenv("KEYSTORE_FILE")
     if (ciKeystore != null) {
         signingConfigs {

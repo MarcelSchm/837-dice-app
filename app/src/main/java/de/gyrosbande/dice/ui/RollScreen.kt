@@ -1,7 +1,8 @@
-package de.gyrosbande.wuerfel.ui
+package de.gyrosbande.dice.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,11 +27,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import de.gyrosbande.wuerfel.domain.RollPhase
+import de.gyrosbande.dice.domain.RollPhase
 
 /**
- * Der Würfel-Screen: führt durch Kategorie-Wurf → Drink-Wurf → Ergebnis.
- * Große Bedienelemente – wird am Tisch mit einer Hand bedient.
+ * The dice screen: guides through category roll -> drink roll -> result.
+ * Large controls - this gets operated one-handed at the table.
+ * UI copy is German on purpose (target audience: the Gyrosbande).
  */
 @Composable
 fun RollScreen(viewModel: RollViewModel, onBack: () -> Unit) {
@@ -44,7 +46,7 @@ fun RollScreen(viewModel: RollViewModel, onBack: () -> Unit) {
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Phasen-Überschrift
+        // Phase heading
         val (title, subtitle) = when (phase) {
             is RollPhase.CategoryRoll -> "Wurf 1: Kategorie" to "Ein Würfel entscheidet, aus welcher Ecke der Karte es brennt."
             is RollPhase.DrinkRoll -> "Wurf 2: ${phase.category.name}" to
@@ -64,7 +66,7 @@ fun RollScreen(viewModel: RollViewModel, onBack: () -> Unit) {
         }
         Spacer(Modifier.height(24.dp))
 
-        // Würfel-Anzeige
+        // Dice display
         val diceCount = when (phase) {
             is RollPhase.CategoryRoll -> 1
             is RollPhase.DrinkRoll -> phase.diceCount
@@ -80,7 +82,7 @@ fun RollScreen(viewModel: RollViewModel, onBack: () -> Unit) {
         when (phase) {
             is RollPhase.Finished -> ResultCard(phase, onRestart = viewModel::restart, onBack = onBack)
             else -> {
-                // Modus-Umschalter
+                // Mode switch
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                     RollMode.entries.forEachIndexed { index, mode ->
                         SegmentedButton(
@@ -88,13 +90,13 @@ fun RollScreen(viewModel: RollViewModel, onBack: () -> Unit) {
                             onClick = { viewModel.setMode(mode) },
                             shape = SegmentedButtonDefaults.itemShape(index, RollMode.entries.size),
                         ) {
-                            Text(if (mode == RollMode.VIRTUELL) "App würfelt" else "Echte Würfel")
+                            Text(if (mode == RollMode.VIRTUAL) "App würfelt" else "Echte Würfel")
                         }
                     }
                 }
                 Spacer(Modifier.height(16.dp))
 
-                if (state.mode == RollMode.VIRTUELL) {
+                if (state.mode == RollMode.VIRTUAL) {
                     Button(
                         onClick = viewModel::rollVirtual,
                         enabled = !state.isRolling,
@@ -121,7 +123,7 @@ fun RollScreen(viewModel: RollViewModel, onBack: () -> Unit) {
                                 onClick = { viewModel.enterManualDie(n) },
                                 enabled = needed > 0,
                                 modifier = Modifier.size(48.dp),
-                                contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+                                contentPadding = PaddingValues(0.dp),
                             ) {
                                 Text("$n", style = MaterialTheme.typography.titleMedium)
                             }
@@ -129,8 +131,8 @@ fun RollScreen(viewModel: RollViewModel, onBack: () -> Unit) {
                     }
                 }
 
-                // Beim Drink-Wurf die nummerierte Liste zeigen – so sieht man,
-                // worauf man hofft (oder was droht).
+                // During the drink roll, show the numbered list - so you can
+                // see what you're hoping for (or what's looming).
                 if (phase is RollPhase.DrinkRoll) {
                     Spacer(Modifier.height(24.dp))
                     Card(

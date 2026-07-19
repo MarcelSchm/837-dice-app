@@ -1,14 +1,13 @@
 *.iml
 .gradle
 /local.properties
-# .idea komplett ignorieren – Android Studio erzeugt den Ordner neu;
-# die alten Dateien darin stammen noch aus einem Nicht-Android-Setup
+# Ignore .idea entirely - Android Studio regenerates it
 /.idea
 .DS_Store
 build/
 /captures
 .externalNativeBuild
 .cxx
-# Signatur-Keystores gehören NIE ins Repo (liegen in C:\Repo\837-wuerfel-signing)
+# Signing keystores must NEVER be committed (kept outside the repo)
 *.jks
 *.keystore

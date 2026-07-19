@@ -1,12 +1,11 @@
-package de.gyrosbande.wuerfel.ui.theme
+package de.gyrosbande.dice.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-// Farbwelt am Logo orientiert: Schwarz/Weiß mit Gold-Akzent.
+// Color world based on the logo: black/white with a gold accent.
 val Gold = Color(0xFFD4AF37)
 val GoldDark = Color(0xFFA8862A)
 val NearBlack = Color(0xFF111111)
@@ -25,9 +24,9 @@ private val GyrosbandeColors = darkColorScheme(
     onSurfaceVariant = Color(0xFFCCCCCC),
 )
 
-/** Die App ist immer dunkel – wie die Festival-Nacht. */
+/** The app is always dark - like the festival night. */
 @Composable
-fun Wuerfel837Theme(content: @Composable () -> Unit) {
+fun Dice837Theme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = GyrosbandeColors,
         content = content,

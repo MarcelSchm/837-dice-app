@@ -1,11 +1,12 @@
-package de.gyrosbande.wuerfel.domain
+package de.gyrosbande.dice.domain
 
 /**
- * Die Getränkekarte vom San Remo (Stand 2026), abgetippt von den Fotos.
- * Reihenfolge = Kartenreihenfolge, sie ist spielentscheidend (Wrap-Regel).
+ * The San Remo drinks menu (as of 2026), transcribed from the photos.
+ * Order = menu order, which is game-relevant (wrap rule). Category and
+ * drink names stay German on purpose - they are what's on the real menu.
  *
- * Wird später durch die editierbare Room-Datenbank ersetzt; diese Liste
- * dient dann als Seed beim ersten App-Start.
+ * Will later be replaced by the editable Room database; this list then
+ * serves as the seed on first app start.
  */
 object MenuSeed {
 

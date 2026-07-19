@@ -1,26 +1,26 @@
-package de.gyrosbande.wuerfel.ui
+package de.gyrosbande.dice.ui
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import de.gyrosbande.wuerfel.domain.GameFlow
-import de.gyrosbande.wuerfel.domain.RollPhase
+import de.gyrosbande.dice.domain.GameFlow
+import de.gyrosbande.dice.domain.RollPhase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
-/** Eingabemodus: App würfelt selbst oder echte Würfel am Tisch. */
-enum class RollMode { VIRTUELL, ECHT }
+/** Input mode: the app rolls for you, or real dice at the table. */
+enum class RollMode { VIRTUAL, MANUAL }
 
 data class RollUiState(
     val phase: RollPhase = RollPhase.CategoryRoll,
-    val mode: RollMode = RollMode.VIRTUELL,
-    /** Aktuell angezeigte Augenzahlen (auch während der Animation). */
+    val mode: RollMode = RollMode.VIRTUAL,
+    /** Currently displayed pip values (also during the animation). */
     val shownDice: List<Int> = emptyList(),
     val isRolling: Boolean = false,
-    /** Bei manueller Eingabe mit 2 Würfeln: bereits eingetippte Augenzahlen. */
+    /** Manual entry with 2 dice: pip values typed in so far. */
     val pendingManual: List<Int> = emptyList(),
 )
 
@@ -35,7 +35,7 @@ class RollViewModel : ViewModel() {
         if (!uiState.isRolling) uiState = uiState.copy(mode = mode, pendingManual = emptyList())
     }
 
-    /** Virtuell würfeln, mit kurzer Zitter-Animation vor dem Ergebnis. */
+    /** Roll virtually, with a short shake animation before the result. */
     fun rollVirtual() {
         if (uiState.isRolling || flow.phase is RollPhase.Finished) return
         val diceCount = flow.requiredDice()
@@ -50,7 +50,7 @@ class RollViewModel : ViewModel() {
         }
     }
 
-    /** Eine Augenzahl eines echten Würfels eintippen (1–6). */
+    /** Type in one pip value of a real die (1-6). */
     fun enterManualDie(value: Int) {
         if (uiState.isRolling || flow.phase is RollPhase.Finished) return
         val pending = uiState.pendingManual + value
@@ -62,7 +62,7 @@ class RollViewModel : ViewModel() {
         }
     }
 
-    /** Neuen Durchgang starten (Modus bleibt erhalten). */
+    /** Start a new round (mode is kept). */
     fun restart() {
         flow.reset()
         uiState = RollUiState(mode = uiState.mode)

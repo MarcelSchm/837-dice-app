@@ -1,4 +1,4 @@
-package de.gyrosbande.wuerfel.ui
+package de.gyrosbande.dice.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
@@ -17,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import de.gyrosbande.wuerfel.R
+import de.gyrosbande.dice.R
 
 @Composable
 fun HomeScreen(onStartRoll: () -> Unit) {
@@ -34,7 +34,7 @@ fun HomeScreen(onStartRoll: () -> Unit) {
             modifier = Modifier.size(220.dp),
         )
         Spacer(Modifier.height(16.dp))
-        Text("837 Würfel", style = MaterialTheme.typography.displaySmall)
+        Text("837 Dice", style = MaterialTheme.typography.displaySmall)
         Text(
             "Das Schnapswürfeln der Gyrosbande",
             style = MaterialTheme.typography.bodyLarge,

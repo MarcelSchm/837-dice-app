@@ -1,51 +1,52 @@
-# 🎲 837 Würfel – die Trinkspiel-App der Gyrosbande
+# 🎲 837 Dice - the Gyrosbande's drinking game app
 
-Das legendäre Schnapswürfeln vom San Remo (Open Flair, Eschwege) als
-Android-App. Wurf 1 bestimmt die Kategorie, Wurf 2 den Drink – bei mehr als
-6 Drinks mit zwei Würfeln, und wer „unten durch" ist, zählt oben weiter.
-Kann auch eine ganze Flasche Prosecco werden. Regeln sind Regeln. 🍾
+The legendary schnapps dice game from the San Remo restaurant (Open Flair
+festival, Eschwege) as an Android app. Roll 1 picks the category, roll 2
+picks the drink - categories with more than 6 drinks use two dice, and if
+you run off the bottom of the list you keep counting from the top. Can be a
+whole bottle of Prosecco. Rules are rules. 🍾
 
 ![Android CI](../../actions/workflows/android.yml/badge.svg)
 
-## 📲 App herunterladen
+## 📲 Download the app
 
-- **Empfohlen:** Neueste Version unter
-  [Releases](../../releases/latest) – die `.apk` herunterladen, auf dem
-  Handy öffnen, Installation aus unbekannten Quellen erlauben, fertig.
-  Funktioniert ohne GitHub-Konto.
-- **Jeder Commit:** Unter [Actions](../../actions) hat jeder Build ein
-  Artifact `837-wuerfel-apk` (GitHub-Login nötig, 90 Tage verfügbar).
+- **Recommended:** grab the latest version from
+  [Releases](../../releases/latest) - download the `.apk`, open it on your
+  phone, allow installation from unknown sources, done. No GitHub account
+  needed.
+- **Every commit:** each build under [Actions](../../actions) has an
+  artifact `837-dice-apk` (requires GitHub login, kept for 90 days).
 
-## 🚀 Neue Version veröffentlichen
+## 🚀 Publish a new version
 
 ```bash
 git tag v1.0
 git push origin v1.0
 ```
 
-Die Pipeline baut, testet und hängt die APK automatisch an ein
-GitHub-Release. Versionsnummer vorher in `app/build.gradle.kts`
-(`versionName`/`versionCode`) hochzählen.
+The pipeline builds, tests and attaches the APK to a GitHub release
+automatically. Bump `versionName`/`versionCode` in `app/build.gradle.kts`
+beforehand.
 
-## 🔐 Signierung (einmalig einrichten)
+## 🔐 Signing (one-time setup)
 
-Ohne Konfiguration signiert die CI mit einem Debug-Key (funktioniert, aber
-bei wechselnden Keys muss man die App vor einem Update deinstallieren).
-Für stabile Updates: Repo → **Settings → Secrets and variables → Actions**
-und vier Secrets anlegen:
+Without configuration the CI signs with a debug key (works, but changing
+keys means uninstalling the app before an update). For stable updates:
+repo → **Settings → Secrets and variables → Actions** and create four
+secrets:
 
-| Secret | Inhalt |
+| Secret | Value |
 |---|---|
-| `KEYSTORE_BASE64` | Keystore-Datei als Base64 (liegt vorbereitet in `C:\Repo\837-wuerfel-signing\keystore-base64.txt`) |
-| `KEYSTORE_PASSWORD` | Keystore-Passwort |
+| `KEYSTORE_BASE64` | the keystore file as Base64 |
+| `KEYSTORE_PASSWORD` | keystore password |
 | `KEY_ALIAS` | `wuerfel837` |
-| `KEY_PASSWORD` | Key-Passwort (identisch zum Keystore-Passwort) |
+| `KEY_PASSWORD` | key password (same as the keystore password) |
 
-## 🛠️ Lokal bauen
+## 🛠️ Build locally
 
 ```powershell
 $env:JAVA_HOME = 'C:\Program Files\Android\Android Studio\jbr'
 .\gradlew.bat test assembleDebug
 ```
 
-Details, Spielregeln und Architektur: siehe [CLAUDE.md](CLAUDE.md).
+Details, game rules and architecture: see [CLAUDE.md](CLAUDE.md).

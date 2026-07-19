@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "837 Wuerfel"
+rootProject.name = "837-dice"
 include(":app")

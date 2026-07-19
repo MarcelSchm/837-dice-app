@@ -1,4 +1,4 @@
-package de.gyrosbande.wuerfel.ui
+package de.gyrosbande.dice.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -16,7 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/** Klassisches Würfel-Auge-Layout pro Augenzahl (relative Positionen). */
+/** Classic dice pip layout per value (relative positions). */
 private val pipLayouts: Map<Int, List<Pair<Float, Float>>> = mapOf(
     1 to listOf(0.5f to 0.5f),
     2 to listOf(0.25f to 0.25f, 0.75f to 0.75f),
@@ -30,7 +30,7 @@ private val pipLayouts: Map<Int, List<Pair<Float, Float>>> = mapOf(
     ),
 )
 
-/** Ein Würfel mit Augen; [value] null zeigt einen leeren Platzhalter. */
+/** A die with pips; a null [value] shows an empty placeholder. */
 @Composable
 fun DiceFace(value: Int?, size: Dp = 96.dp) {
     Box(

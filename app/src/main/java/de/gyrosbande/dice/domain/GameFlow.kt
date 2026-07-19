@@ -1,8 +1,8 @@
-package de.gyrosbande.wuerfel.domain
+package de.gyrosbande.dice.domain
 
 import kotlin.random.Random
 
-/** Ergebnis eines kompletten Durchgangs (Kategorie + Drink). */
+/** Result of one complete round (category + drink). */
 data class RollOutcome(
     val category: Category,
     val drink: Drink,
@@ -12,26 +12,26 @@ data class RollOutcome(
     val drinkRollTotal: Int get() = drinkRolls.sum()
 }
 
-/** Die Phasen eines Durchgangs. */
+/** The phases of one round. */
 sealed interface RollPhase {
-    /** Wurf 1 steht an: Kategorie erwürfeln. */
+    /** Roll 1 is up: roll the category. */
     data object CategoryRoll : RollPhase
 
-    /** Wurf 2 steht an: Drink in [category] erwürfeln ([diceCount] Würfel). */
+    /** Roll 2 is up: roll the drink within [category] ([diceCount] dice). */
     data class DrinkRoll(val category: Category, val categoryRoll: Int) : RollPhase {
         val diceCount: Int get() = DiceRules.diceCountFor(category.drinks.size)
     }
 
-    /** Fertig – [outcome] muss bestellt werden. */
+    /** Done - [outcome] must be ordered. */
     data class Finished(val outcome: RollOutcome) : RollPhase
 }
 
 /**
- * Zustandsmaschine für einen Würfel-Durchgang. Reine Kotlin-Klasse ohne
- * Android-Abhängigkeiten, damit sie komplett testbar ist.
+ * State machine for one dice round. Pure Kotlin class without Android
+ * dependencies so it is fully unit-testable.
  *
- * Eingaben kommen entweder vom virtuellen Würfel ([rollVirtual]) oder von
- * echten Würfeln am Tisch ([enterManual]).
+ * Input comes either from the virtual dice ([rollVirtual]) or from real
+ * dice at the table ([enterManual]).
  */
 class GameFlow(
     private val categories: List<Category> = MenuSeed.categories,
@@ -44,30 +44,30 @@ class GameFlow(
         phase = RollPhase.CategoryRoll
     }
 
-    /** Wie viele Würfel die aktuelle Phase braucht. */
+    /** How many dice the current phase requires. */
     fun requiredDice(): Int = when (val p = phase) {
         is RollPhase.CategoryRoll -> 1
         is RollPhase.DrinkRoll -> p.diceCount
         is RollPhase.Finished -> 0
     }
 
-    /** Virtuell würfeln: Die App würfelt selbst. Gibt die Augenzahlen zurück. */
+    /** Roll virtually: the app rolls for you. Returns the pip values. */
     fun rollVirtual(): List<Int> {
         val dice = List(requiredDice()) { random.nextInt(1, 7) }
-        check(dice.isNotEmpty()) { "Durchgang ist bereits beendet" }
+        check(dice.isNotEmpty()) { "Round is already finished" }
         advance(dice)
         return dice
     }
 
     /**
-     * Ergebnis echter Würfel eintragen. [dice] sind die einzelnen Augenzahlen
-     * (1–6); bei zwei Würfeln also zwei Werte.
+     * Enter the result of real dice. [dice] are the individual pip values
+     * (1-6); with two dice that means two values.
      */
     fun enterManual(dice: List<Int>) {
         require(dice.size == requiredDice()) {
-            "Erwartet ${requiredDice()} Würfel, bekommen: ${dice.size}"
+            "Expected ${requiredDice()} dice, got: ${dice.size}"
         }
-        require(dice.all { it in 1..6 }) { "Augenzahlen müssen 1–6 sein: $dice" }
+        require(dice.all { it in 1..6 }) { "Pip values must be 1-6: $dice" }
         advance(dice)
     }
 
@@ -90,7 +90,7 @@ class GameFlow(
                     )
                 )
             }
-            is RollPhase.Finished -> error("Durchgang ist bereits beendet")
+            is RollPhase.Finished -> error("Round is already finished")
         }
     }
 }

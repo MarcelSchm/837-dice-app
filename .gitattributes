@@ -1,5 +1,5 @@
-# gradlew MUSS mit LF eingecheckt werden, sonst scheitert der Linux-CI-Runner
-# ("bad interpreter"). Windows-Batch braucht CRLF.
+# gradlew MUST be checked in with LF, otherwise the Linux CI runner fails
+# ("bad interpreter"). Windows batch files need CRLF.
 * text=auto
 gradlew text eol=lf
 *.sh text eol=lf
