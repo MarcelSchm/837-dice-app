@@ -12,9 +12,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import de.gyrosbande.dice.ui.AppViewModelProvider
 import de.gyrosbande.dice.ui.HomeScreen
-import de.gyrosbande.dice.ui.RollScreen
-import de.gyrosbande.dice.ui.RollViewModel
+import de.gyrosbande.dice.ui.players.PlayersScreen
+import de.gyrosbande.dice.ui.roll.QuickRollScreen
+import de.gyrosbande.dice.ui.round.RoundScreen
 import de.gyrosbande.dice.ui.theme.Dice837Theme
 
 class MainActivity : ComponentActivity() {
@@ -31,12 +33,32 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding),
                     ) {
                         composable("home") {
-                            HomeScreen(onStartRoll = { navController.navigate("roll") })
+                            HomeScreen(
+                                onStartRound = { navController.navigate("round") },
+                                onQuickRoll = { navController.navigate("quickroll") },
+                                onPlayers = { navController.navigate("players") },
+                            )
                         }
-                        composable("roll") {
-                            val vm: RollViewModel = viewModel()
-                            RollScreen(
-                                viewModel = vm,
+                        composable("quickroll") {
+                            QuickRollScreen(
+                                viewModel = viewModel(factory = AppViewModelProvider.Factory),
+                                onBack = { navController.popBackStack() },
+                            )
+                        }
+                        composable("round") {
+                            RoundScreen(
+                                viewModel = viewModel(factory = AppViewModelProvider.Factory),
+                                onGoToPlayers = {
+                                    navController.navigate("players") {
+                                        popUpTo("home")
+                                    }
+                                },
+                                onDone = { navController.popBackStack("home", inclusive = false) },
+                            )
+                        }
+                        composable("players") {
+                            PlayersScreen(
+                                viewModel = viewModel(factory = AppViewModelProvider.Factory),
                                 onBack = { navController.popBackStack() },
                             )
                         }
