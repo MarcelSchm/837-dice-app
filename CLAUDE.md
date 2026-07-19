@@ -225,11 +225,14 @@ suggestion, adjustable in the app - see open questions):
 
 ### Status
 
-- ✅ Milestones 1-4 (partly): project scaffold, dice logic + tests, app
-  icon, dice screen with virtual rolling and manual entry ("quick roll"
-  without player management), CI/CD pipeline.
-- ⏳ Open: Room persistence, players & rounds + order summary, menu
-  editing UI, history/statistics, shake-to-roll + sound.
+- ✅ Done: project scaffold, dice logic + tests, app icon, roll UI with
+  virtual rolling and manual entry, CI/CD pipeline (v1.0 released), Room
+  persistence with seeded menu, player management ("spielt mit" checkbox
+  selects round participants), round flow with per-player rolls and the
+  grouped order summary (v1.1). Roll results are stored as snapshots -
+  ready for the history/statistics milestone.
+- ⏳ Open: menu editing UI, history/statistics, shake-to-roll + sound,
+  optional extra order items (food, beer) on the summary.
 
 ## Open questions / to clarify with the group
 
