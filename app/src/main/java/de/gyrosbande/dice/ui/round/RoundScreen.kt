@@ -12,10 +12,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.clickable
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -31,12 +31,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import de.gyrosbande.dice.domain.Drink
 import de.gyrosbande.dice.domain.ExtraItem
 import de.gyrosbande.dice.domain.OrderSummary
 import de.gyrosbande.dice.domain.PriceInput
 import de.gyrosbande.dice.ui.OrderCard
 import de.gyrosbande.dice.ui.roll.RollPanel
-import de.gyrosbande.dice.ui.roll.SubstitutePickerDialog
 
 /**
  * The round flow: active players roll one after another; at the end the
@@ -134,7 +134,11 @@ fun RoundScreen(viewModel: RoundViewModel, onGoToPlayers: () -> Unit, onDone: ()
     }
 }
 
-/** Re-rolling one player's drink after "they don't have that". */
+/**
+ * Re-rolling for everyone who had an unavailable drink, one player after
+ * another. Rolling the same sold-out drink again is refused instead of
+ * being accepted.
+ */
 @Composable
 private fun ColumnScope.RedoContent(
     viewModel: RoundViewModel,
@@ -149,7 +153,12 @@ private fun ColumnScope.RedoContent(
         color = MaterialTheme.colorScheme.primary,
     )
     Text(
-        "Die Kategorie bleibt, nur der Drink wird neu gewürfelt.",
+        if (viewModel.redoTotal > 1) {
+            "${viewModel.redoDone} von ${viewModel.redoTotal}. Die Kategorie bleibt, " +
+                "nur der Drink wird neu gewürfelt."
+        } else {
+            "Die Kategorie bleibt, nur der Drink wird neu gewürfelt."
+        },
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,
@@ -158,14 +167,38 @@ private fun ColumnScope.RedoContent(
     RollPanel(
         controller = controller,
         onRollVirtual = viewModel::rollVirtual,
-    ) {
-        Button(
-            onClick = viewModel::confirmRedo,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-        ) {
-            Text("Übernehmen ✅", style = MaterialTheme.typography.titleMedium)
+    ) { finished ->
+        if (viewModel.isUnavailable(finished.outcome.drink)) {
+            // Bad luck - the same sold-out drink came up again.
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                ),
+            ) {
+                Column(Modifier.padding(16.dp)) {
+                    Text(
+                        "Das gibt's immer noch nicht 🙄",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                    Text(
+                        "„${finished.outcome.drink.name}“ hat San Remo gerade nicht. " +
+                            "Nochmal würfeln, oder oben von Hand einen Ersatz wählen.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                }
+            }
+        } else {
+            Button(
+                onClick = viewModel::confirmRedo,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+            ) {
+                Text("Übernehmen ✅", style = MaterialTheme.typography.titleMedium)
+            }
         }
     }
     Spacer(Modifier.height(8.dp))
@@ -178,8 +211,7 @@ private fun ColumnScope.RedoContent(
 private fun SummaryContent(viewModel: RoundViewModel, onDone: () -> Unit) {
     val results = viewModel.results
     var addExtraDialog by remember { mutableStateOf(false) }
-    var fixIndex by remember { mutableStateOf<Int?>(null) }
-    var pickerForIndex by remember { mutableStateOf<Int?>(null) }
+    var unavailableDrink by remember { mutableStateOf<Drink?>(null) }
 
     Text("Die Bestellung 🧾", style = MaterialTheme.typography.headlineMedium)
     Spacer(Modifier.height(4.dp))
@@ -190,15 +222,11 @@ private fun SummaryContent(viewModel: RoundViewModel, onDone: () -> Unit) {
     )
     Spacer(Modifier.height(16.dp))
 
-    // Who rolled what - tap a row when San Remo doesn't have the drink
+    // Who rolled what
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            results.forEachIndexed { index, result ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { fixIndex = index },
-                ) {
+            results.forEach { result ->
+                Row(modifier = Modifier.fillMaxWidth()) {
                     Text(result.player.name, modifier = Modifier.weight(1f))
                     Text(
                         result.outcome.drink.name +
@@ -209,15 +237,11 @@ private fun SummaryContent(viewModel: RoundViewModel, onDone: () -> Unit) {
             }
         }
     }
-    Spacer(Modifier.height(4.dp))
-    Text(
-        "Drink gibt's nicht? Zeile antippen.",
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-    Spacer(Modifier.height(12.dp))
+    Spacer(Modifier.height(16.dp))
 
-    // Grouped order with total (drinks plus manual extras)
+    // Grouped order with total (drinks plus manual extras). Tapping a drink
+    // reports "they don't have that" - it affects everyone who rolled it,
+    // not just one player.
     val outcomes = results.map { it.outcome }
     val extraItems = viewModel.extras.map { it.second }
     OrderCard(
@@ -225,15 +249,19 @@ private fun SummaryContent(viewModel: RoundViewModel, onDone: () -> Unit) {
         totalCents = OrderSummary.totalCents(outcomes) + extraItems.sumOf { it.totalCents },
         extras = extraItems,
         onExtraClick = viewModel::removeExtra,
+        onDrinkClick = { unavailableDrink = it },
     )
-    if (extraItems.isNotEmpty()) {
-        Spacer(Modifier.height(4.dp))
-        Text(
-            "Extras antippen zum Entfernen.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
+    Spacer(Modifier.height(4.dp))
+    Text(
+        if (extraItems.isEmpty()) {
+            "Haben sie einen Drink nicht? Zeile antippen."
+        } else {
+            "Haben sie einen Drink nicht? Zeile antippen. Extras antippen entfernt sie."
+        },
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+    )
     Spacer(Modifier.height(12.dp))
     OutlinedButton(onClick = { addExtraDialog = true }, modifier = Modifier.fillMaxWidth()) {
         Text("Essen oder Getränk dazu 🥙")
@@ -250,56 +278,36 @@ private fun SummaryContent(viewModel: RoundViewModel, onDone: () -> Unit) {
         )
     }
 
-    // "They don't have that" - fix a single result from the summary
-    fixIndex?.let { index ->
-        val result = results.getOrNull(index)
-        if (result == null) {
-            fixIndex = null
-        } else {
-            AlertDialog(
-                onDismissRequest = { fixIndex = null },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            fixIndex = null
-                            viewModel.startRedo(index)
-                        },
-                    ) {
-                        Text("Neu würfeln 🎲")
-                    }
-                },
-                dismissButton = {
-                    Row {
-                        TextButton(onClick = { fixIndex = null }) { Text("Passt doch") }
-                        TextButton(
-                            onClick = {
-                                fixIndex = null
-                                pickerForIndex = index
-                            },
-                        ) {
-                            Text("Selbst wählen 📋")
-                        }
-                    }
-                },
-                title = { Text("„${result.outcome.drink.name}“ gibt's nicht?") },
-                text = {
-                    Text(
-                        "${result.player.name} würfelt in derselben Kategorie neu, " +
-                            "oder ihr wählt von Hand einen Ersatz."
-                    )
-                },
-            )
-        }
-    }
-
-    pickerForIndex?.let { index ->
-        SubstitutePickerDialog(
-            categories = viewModel.controller?.categories.orEmpty(),
-            onPick = { drink ->
-                viewModel.substituteResult(index, drink)
-                pickerForIndex = null
+    // "They don't have that" - names everyone affected before re-rolling
+    unavailableDrink?.let { drink ->
+        val affected = viewModel.playersWith(drink)
+        AlertDialog(
+            onDismissRequest = { unavailableDrink = null },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        unavailableDrink = null
+                        viewModel.markDrinkUnavailable(drink)
+                    },
+                ) {
+                    Text(if (affected.size > 1) "Alle neu würfeln 🎲" else "Neu würfeln 🎲")
+                }
             },
-            onDismiss = { pickerForIndex = null },
+            dismissButton = {
+                TextButton(onClick = { unavailableDrink = null }) { Text("Passt doch") }
+            },
+            title = { Text("„${drink.name}“ gibt's nicht?") },
+            text = {
+                Text(
+                    if (affected.size > 1) {
+                        "${affected.dropLast(1).joinToString(", ")} und ${affected.last()} " +
+                            "würfeln nacheinander neu, jeweils in ihrer eigenen Kategorie."
+                    } else {
+                        "${affected.firstOrNull() ?: "Niemand"} würfelt in derselben " +
+                            "Kategorie neu."
+                    }
+                )
+            },
         )
     }
 

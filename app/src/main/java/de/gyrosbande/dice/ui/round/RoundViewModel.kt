@@ -42,16 +42,34 @@ class RoundViewModel(
     var results by mutableStateOf<List<PlayerOutcome>>(emptyList())
         private set
 
-    /** Row ids of the saved results, parallel to [results] - needed to
-     * rewrite a result when San Remo doesn't have the drink. */
+    /**
+     * Row ids of the saved results, parallel to [results] - needed to
+     * rewrite a result when San Remo doesn't have the drink.
+     */
     private val resultIds = mutableListOf<Long>()
-
-    /** Index of the result being re-rolled from the summary, or null. */
-    var redoIndex by mutableStateOf<Int?>(null)
-        private set
 
     /** Manually added order lines (food, beer ...) with their row ids. */
     var extras by mutableStateOf<List<Pair<Long, ExtraItem>>>(emptyList())
+        private set
+
+    /**
+     * Drinks San Remo told us they are out of (by name, for this round).
+     * Everyone who rolled one has to roll again, and rolling it again
+     * warns instead of being accepted.
+     */
+    var unavailableDrinks by mutableStateOf<Set<String>>(emptySet())
+        private set
+
+    /** Result indices still waiting to be re-rolled, in turn order. */
+    var redoQueue by mutableStateOf<List<Int>>(emptyList())
+        private set
+
+    /** Whose result is being re-rolled right now, or null. */
+    val redoIndex: Int? get() = redoQueue.firstOrNull()
+
+    /** Position of the current re-roll, e.g. "2 von 3". */
+    val redoDone: Int get() = redoTotal - redoQueue.size + 1
+    var redoTotal by mutableStateOf(0)
         private set
 
     val players: List<Player> get() = session?.players ?: emptyList()
@@ -72,6 +90,13 @@ class RoundViewModel(
     fun rollVirtual() {
         viewModelScope.launch { controller?.rollVirtual() }
     }
+
+    /** True when San Remo said they are out of this drink. */
+    fun isUnavailable(drink: Drink): Boolean = drink.name in unavailableDrinks
+
+    /** Names of the players who rolled [drink], in turn order. */
+    fun playersWith(drink: Drink): List<String> =
+        results.filter { it.outcome.drink.name == drink.name }.map { it.player.name }
 
     /** Add a manual order line (food, beer ...) to the round. */
     fun addExtra(extra: ExtraItem) {
@@ -112,22 +137,32 @@ class RoundViewModel(
 
     // --- "They don't have that" while reading out the order ------------
 
-    /** Re-roll the drink for the result at [index] (same category). */
-    fun startRedo(index: Int) {
-        val outcome = results.getOrNull(index)?.outcome ?: return
-        controller?.redoDrinkRoll(outcome.category, outcome.categoryRoll)
-        redoIndex = index
+    /**
+     * San Remo is out of [drink]: remember it for this round and queue up
+     * everyone who rolled it, so they re-roll one after another.
+     */
+    fun markDrinkUnavailable(drink: Drink) {
+        val affected = results.indices.filter { results[it].outcome.drink.name == drink.name }
+        if (affected.isEmpty()) return
+        unavailableDrinks = unavailableDrinks + drink.name
+        redoQueue = affected
+        redoTotal = affected.size
+        startRedoFor(affected.first())
     }
 
+    /** Aborts the whole re-roll queue; the drink stays marked. */
     fun cancelRedo() {
-        redoIndex = null
+        redoQueue = emptyList()
+        redoTotal = 0
     }
 
-    /** Take over the re-rolled drink for the player being corrected. */
+    /** Take over the re-rolled drink and move on to the next player. */
     fun confirmRedo() {
         val index = redoIndex ?: return
         val activeController = controller ?: return
         val finished = activeController.state.phase as? RollPhase.Finished ?: return
+        // Never accept a drink they already told us is out.
+        if (isUnavailable(finished.outcome.drink)) return
         val wasVirtual = activeController.state.mode == RollMode.VIRTUAL
 
         viewModelScope.launch {
@@ -136,23 +171,15 @@ class RoundViewModel(
                 roundRepository.updateResult(it, updated, wasVirtual)
             }
             results = results.toMutableList().also { it[index] = updated }
-            redoIndex = null
+
+            val remaining = redoQueue.drop(1)
+            redoQueue = remaining
+            if (remaining.isEmpty()) redoTotal = 0 else startRedoFor(remaining.first())
         }
     }
 
-    /** Replace the drink of the result at [index] by hand. */
-    fun substituteResult(index: Int, drink: Drink) {
-        val old = results.getOrNull(index) ?: return
-        val updated = PlayerOutcome(
-            old.player,
-            old.outcome.copy(drink = drink, substituted = true),
-        )
-        viewModelScope.launch {
-            resultIds.getOrNull(index)?.let {
-                // A manual swap is no new roll - keep it marked as manual.
-                roundRepository.updateResult(it, updated, wasVirtual = false)
-            }
-            results = results.toMutableList().also { it[index] = updated }
-        }
+    private fun startRedoFor(index: Int) {
+        val outcome = results.getOrNull(index)?.outcome ?: return
+        controller?.redoDrinkRoll(outcome.category, outcome.categoryRoll)
     }
 }

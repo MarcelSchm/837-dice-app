@@ -33,6 +33,8 @@ fun OrderCard(
     modifier: Modifier = Modifier,
     extras: List<ExtraItem> = emptyList(),
     onExtraClick: ((Int) -> Unit)? = null,
+    /** Set to make drink lines tappable ("they don't have that"). */
+    onDrinkClick: ((de.gyrosbande.dice.domain.Drink) -> Unit)? = null,
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -44,6 +46,11 @@ fun OrderCard(
                     quantity = line.quantity,
                     label = line.drink.name + (line.drink.sizeLabel?.let { " ($it)" } ?: ""),
                     amount = line.totalFormatted,
+                    modifier = if (onDrinkClick != null) {
+                        Modifier.clickable { onDrinkClick(line.drink) }
+                    } else {
+                        Modifier
+                    },
                 )
             }
             extras.forEachIndexed { index, extra ->
