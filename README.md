@@ -19,34 +19,51 @@ whole bottle of Prosecco. Rules are rules. 🍾
 
 ## 🚀 Publish a new version
 
+Bump `versionName`/`versionCode` in `app/build.gradle.kts`, commit, then
+tag and push:
+
 ```bash
-git tag v1.0
-git push origin v1.0
+git tag v1.1
+git push origin v1.1
 ```
 
 The pipeline builds, tests and attaches the APK to a GitHub release
-automatically. Bump `versionName`/`versionCode` in `app/build.gradle.kts`
-beforehand.
-
-## 🔐 Signing (one-time setup)
-
-Without configuration the CI signs with a debug key (works, but changing
-keys means uninstalling the app before an update). For stable updates:
-repo → **Settings → Secrets and variables → Actions** and create four
-secrets:
-
-| Secret | Value |
-|---|---|
-| `KEYSTORE_BASE64` | the keystore file as Base64 |
-| `KEYSTORE_PASSWORD` | keystore password |
-| `KEY_ALIAS` | `wuerfel837` |
-| `KEY_PASSWORD` | key password (same as the keystore password) |
+automatically. Signing is covered in [docs/SIGNING.md](docs/SIGNING.md).
 
 ## 🛠️ Build locally
+
+### In Android Studio
+
+1. **File → Open**, select this folder. Android Studio detects the Gradle
+   project and syncs it automatically (first sync downloads dependencies -
+   takes a few minutes).
+2. Pick a run target in the toolbar (an emulator or a USB-connected phone
+   with developer mode / USB debugging enabled).
+3. Press **Run ▶** (or Shift+F10) to build, install and launch the debug
+   build in one step.
+4. To build a version to hand out without running it: **Build → Build
+   Bundle(s) / APK(s) → Build APK(s)**. Click **locate** in the
+   notification that appears when it finishes, or find it under
+   `app/build/outputs/apk/debug/app-debug.apk`.
+5. To build a **release APK signed with your own keystore** (skip this for
+   just trying the app - the debug build above is enough): **Build →
+   Generate Signed Bundle / APK…** → APK → point it at your keystore (see
+   [docs/SIGNING.md](docs/SIGNING.md)) → choose the `release` build
+   variant.
+6. Change the app version before building: open
+   `app/build.gradle.kts` in the project tree and bump `versionCode` /
+   `versionName` in `defaultConfig`.
+
+### From the command line
 
 ```powershell
 $env:JAVA_HOME = 'C:\Program Files\Android\Android Studio\jbr'
 .\gradlew.bat test assembleDebug
 ```
 
-Details, game rules and architecture: see [CLAUDE.md](CLAUDE.md).
+The debug APK lands in `app/build/outputs/apk/debug/app-debug.apk`.
+
+## 📚 More
+
+- [Game rules, menu & architecture](docs/DETAILS.md)
+- [Signing & release secrets](docs/SIGNING.md)
