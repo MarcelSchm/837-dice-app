@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import de.gyrosbande.dice.domain.PlayerName
 
 /**
  * Manage the Gyrosbande: add/remove players; the checkbox ("spielt mit")
@@ -53,12 +54,23 @@ fun PlayersScreen(viewModel: PlayersViewModel, onBack: () -> Unit) {
         )
         Spacer(Modifier.height(16.dp))
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        // Names are always capitalized, and every player needs a distinct
+        // name - we have two Marcels, they become "Marcel S" and "Marcel H".
+        val trimmedName = PlayerName.normalize(newName)
+        val isDuplicate = PlayerName.isTaken(newName, players.map { it.name })
+
+        Row(verticalAlignment = Alignment.Top) {
             OutlinedTextField(
                 value = newName,
-                onValueChange = { newName = it },
+                onValueChange = { newName = it.replaceFirstChar(Char::uppercaseChar) },
                 label = { Text("Name") },
                 singleLine = true,
+                isError = isDuplicate,
+                supportingText = if (isDuplicate) {
+                    { Text("„$trimmedName“ gibt es schon. Mach z. B. „$trimmedName S“ daraus.") }
+                } else {
+                    null
+                },
                 modifier = Modifier.weight(1f),
             )
             IconButton(
@@ -66,7 +78,8 @@ fun PlayersScreen(viewModel: PlayersViewModel, onBack: () -> Unit) {
                     viewModel.add(newName)
                     newName = ""
                 },
-                enabled = newName.isNotBlank(),
+                enabled = trimmedName.isNotEmpty() && !isDuplicate,
+                modifier = Modifier.padding(top = 8.dp),
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Spieler hinzufügen")
             }
