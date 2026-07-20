@@ -63,11 +63,13 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
         run: ./gradlew assembleRelease
 
-      - name: Rename APK
+      - name: Rename APKs
         run: |
           VERSION="${GITHUB_REF_NAME}"
           cp app/build/outputs/apk/release/app-release.apk \
              "837-dice-${VERSION//\//-}-${GITHUB_SHA::7}.apk"
+          cp wear/build/outputs/apk/release/wear-release.apk \
+             "837-dice-wear-${VERSION//\//-}-${GITHUB_SHA::7}.apk"
 
       - name: Upload APK as artifact
         uses: actions/upload-artifact@v4
@@ -94,6 +96,10 @@ jobs:
           ---
           **Install:** download the APK below, open it on your phone and
           allow installation from unknown sources.
+
+          **Pixel Watch:** the `-wear-` APK is the standalone watch app -
+          sideload it onto the watch via `adb install` (developer mode +
+          wireless debugging on the watch).
           EOF
 
       - name: Create GitHub release (v* tags only)

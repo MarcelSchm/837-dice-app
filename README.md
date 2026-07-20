@@ -16,6 +16,11 @@ whole bottle of Prosecco. Rules are rules. 🍾
   needed.
 - **Every commit:** each build under [Actions](../../actions) has an
   artifact `837-dice-apk` (requires GitHub login, kept for 90 days).
+- **Pixel Watch:** releases also contain a standalone watch app
+  (`837-dice-wear-…apk`) - roll by tapping or shaking your wrist.
+  Sideload it onto the watch with `adb install` (enable developer mode
+  and wireless debugging on the watch first); details in
+  [docs/WEAR.md](docs/WEAR.md).
 
 ## 🚀 Publish a new version
 

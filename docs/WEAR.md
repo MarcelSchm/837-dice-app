@@ -1,8 +1,18 @@
-# Pixel Watch companion app - concept
+# Pixel Watch companion app
 
-Feasibility check and design sketch for bringing 837 Dice to Wear OS
-(Pixel Watch and other Wear OS 3+ watches). Not implemented yet - this is
-the plan.
+Design sketch and status for 837 Dice on Wear OS (Pixel Watch and other
+Wear OS 3+ watches).
+
+**Status: Phase 1 is implemented** - the `:wear` module is the standalone
+quick-roll app described below, built on the shared `:core` module and
+attached to every release as `837-dice-wear-vX.Y.apk`. Phases 2 and 3
+are still concepts.
+
+**Not synced yet, by design:** phase 1 rolls on the bundled San Remo menu
+and mirrors the phone's "Schnell würfeln", which never counts towards
+history or statistics - so there is nothing to sync and nothing gets
+lost. Menu edits made on the phone do NOT reach the watch until phase 2
+(Data Layer sync), and watch rolls cannot join a phone round yet.
 
 ## Verdict: very doable
 
@@ -21,7 +31,7 @@ sticky. Raising your wrist, shaking it (the watch has an accelerometer -
 the dice-cup gesture works even better on a wrist) and reading "Ouzo,
 2,50 €" off the watch face is the perfect table experience.
 
-## Phase 1 - standalone quick roll (MVP)
+## Phase 1 - standalone quick roll (implemented)
 
 A self-contained watch app, no phone connection needed:
 

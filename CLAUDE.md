@@ -248,7 +248,14 @@ suggestion, adjustable in the app - see open questions):
   pip swap, drink CRUD + reorder, reset to seed), extra order items on
   the summary (schema v4, in export format), shake-to-roll with a
   synthesized dice sound (mutable via 🔊 toggle) (v1.5).
-- ⏳ Open: Wear OS companion app (concept in docs/WEAR.md).
+- ✅ Wear OS phase 1 (v2.1): `:core` module split (the pure domain package
+  is now shared), `:wear` = standalone Compose-for-Wear quick-roll app
+  (tap or wrist-shake, haptics instead of sound, bundled menu seed, same
+  applicationId as the phone app, attached to releases as
+  `837-dice-wear-vX.Y.apk`). Deliberately unsynced - mirrors the phone's
+  quick roll, which never counts towards history.
+- ⏳ Open: Wear OS phase 2 - Data Layer sync (menu + watch rolls joining
+  phone rounds), see docs/WEAR.md.
 - Decisions: quick rolls ("Schnell würfeln") deliberately do NOT count
   towards history/statistics - only finished rounds do. Players are
   matched across devices by trimmed, case-insensitive name. The db is at
