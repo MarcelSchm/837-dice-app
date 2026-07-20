@@ -53,6 +53,17 @@ fun ColumnScope.RollPanel(
 ) {
     val state = controller.state
     val phase = state.phase
+    val feedback = rememberDiceFeedback()
+    val rollWithFeedback = {
+        feedback.playRoll()
+        onRollVirtual()
+    }
+
+    // Shaking the phone rolls too - like a dice cup.
+    ShakeToRoll(
+        enabled = state.mode == RollMode.VIRTUAL && !state.isRolling && phase !is RollPhase.Finished,
+        onShake = rollWithFeedback,
+    )
 
     // Phase heading
     val (title, subtitle) = when (phase) {
@@ -96,23 +107,31 @@ fun ColumnScope.RollPanel(
             resultActions(phase)
         }
         else -> {
-            // Mode switch
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                RollMode.entries.forEachIndexed { index, mode ->
-                    SegmentedButton(
-                        selected = state.mode == mode,
-                        onClick = { controller.setMode(mode) },
-                        shape = SegmentedButtonDefaults.itemShape(index, RollMode.entries.size),
-                    ) {
-                        Text(if (mode == RollMode.VIRTUAL) "App würfelt" else "Echte Würfel")
+            // Mode switch plus sound toggle
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                SingleChoiceSegmentedButtonRow(modifier = Modifier.weight(1f)) {
+                    RollMode.entries.forEachIndexed { index, mode ->
+                        SegmentedButton(
+                            selected = state.mode == mode,
+                            onClick = { controller.setMode(mode) },
+                            shape = SegmentedButtonDefaults.itemShape(index, RollMode.entries.size),
+                        ) {
+                            Text(if (mode == RollMode.VIRTUAL) "App würfelt" else "Echte Würfel")
+                        }
                     }
+                }
+                TextButton(onClick = feedback::toggleSound) {
+                    Text(if (feedback.soundEnabled) "🔊" else "🔇")
                 }
             }
             Spacer(Modifier.height(16.dp))
 
             if (state.mode == RollMode.VIRTUAL) {
                 Button(
-                    onClick = onRollVirtual,
+                    onClick = rollWithFeedback,
                     enabled = !state.isRolling,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -123,6 +142,12 @@ fun ColumnScope.RollPanel(
                         style = MaterialTheme.typography.titleLarge,
                     )
                 }
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Oder das Handy schütteln wie einen Würfelbecher.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             } else {
                 val needed = diceCount - state.pendingManual.size
                 Text(
