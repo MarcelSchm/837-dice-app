@@ -21,3 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "837-dice"
 include(":app")
+include(":core")
+include(":wear")
