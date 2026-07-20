@@ -16,6 +16,8 @@ import de.gyrosbande.dice.ui.AppViewModelProvider
 import de.gyrosbande.dice.ui.HomeScreen
 import de.gyrosbande.dice.ui.history.HistoryDetailScreen
 import de.gyrosbande.dice.ui.history.HistoryScreen
+import de.gyrosbande.dice.ui.menu.CategoryEditScreen
+import de.gyrosbande.dice.ui.menu.MenuScreen
 import de.gyrosbande.dice.ui.players.PlayersScreen
 import de.gyrosbande.dice.ui.roll.QuickRollScreen
 import de.gyrosbande.dice.ui.round.RoundScreen
@@ -40,6 +42,21 @@ class MainActivity : ComponentActivity() {
                                 onQuickRoll = { navController.navigate("quickroll") },
                                 onPlayers = { navController.navigate("players") },
                                 onHistory = { navController.navigate("history") },
+                                onMenu = { navController.navigate("menu") },
+                            )
+                        }
+                        composable("menu") {
+                            MenuScreen(
+                                viewModel = viewModel(factory = AppViewModelProvider.Factory),
+                                onOpenCategory = { id -> navController.navigate("menu/$id") },
+                                onBack = { navController.popBackStack() },
+                            )
+                        }
+                        composable("menu/{categoryId}") { backStackEntry ->
+                            CategoryEditScreen(
+                                viewModel = viewModel(factory = AppViewModelProvider.Factory),
+                                categoryId = backStackEntry.arguments?.getString("categoryId")?.toLongOrNull(),
+                                onBack = { navController.popBackStack() },
                             )
                         }
                         composable("history") {

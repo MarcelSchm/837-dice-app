@@ -6,6 +6,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import de.gyrosbande.dice.DiceApp
 import de.gyrosbande.dice.ui.history.HistoryViewModel
+import de.gyrosbande.dice.ui.menu.MenuViewModel
 import de.gyrosbande.dice.ui.players.PlayersViewModel
 import de.gyrosbande.dice.ui.roll.QuickRollViewModel
 import de.gyrosbande.dice.ui.round.RoundViewModel
@@ -25,6 +26,9 @@ object AppViewModelProvider {
                 playerRepository = diceApp().playerRepository,
                 roundRepository = diceApp().roundRepository,
             )
+        }
+        initializer {
+            MenuViewModel(diceApp().menuRepository)
         }
         initializer {
             HistoryViewModel(diceApp())

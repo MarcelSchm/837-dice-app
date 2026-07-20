@@ -3,6 +3,7 @@ package de.gyrosbande.dice.ui
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,6 +29,7 @@ fun HomeScreen(
     onQuickRoll: () -> Unit,
     onPlayers: () -> Unit,
     onHistory: () -> Unit,
+    onMenu: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -68,29 +70,34 @@ fun HomeScreen(
             Text("Schnell würfeln", style = MaterialTheme.typography.titleMedium)
         }
         Spacer(Modifier.height(12.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(
                 onClick = onPlayers,
                 modifier = Modifier
                     .weight(1f)
                     .height(52.dp),
+                contentPadding = PaddingValues(horizontal = 4.dp),
             ) {
-                Text("Spieler", style = MaterialTheme.typography.titleMedium)
+                Text("Spieler", style = MaterialTheme.typography.titleSmall)
             }
             OutlinedButton(
                 onClick = onHistory,
                 modifier = Modifier
                     .weight(1f)
                     .height(52.dp),
+                contentPadding = PaddingValues(horizontal = 4.dp),
             ) {
-                Text("Historie", style = MaterialTheme.typography.titleMedium)
+                Text("Historie", style = MaterialTheme.typography.titleSmall)
+            }
+            OutlinedButton(
+                onClick = onMenu,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp),
+                contentPadding = PaddingValues(horizontal = 4.dp),
+            ) {
+                Text("Karte", style = MaterialTheme.typography.titleSmall)
             }
         }
-        Spacer(Modifier.height(24.dp))
-        Text(
-            "Kartenpflege folgt bald.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }
