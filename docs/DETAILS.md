@@ -114,12 +114,21 @@ and can change (prices/lineup) - the source photos live in `images/`.
 - Menu and results are persisted (Room); roll results are stored as
   snapshots (name/price at roll time) so later menu edits don't rewrite
   history.
+- History: per-day round list with detail view and a festival-year filter.
+  Quick rolls ("Schnell würfeln") deliberately don't count - only finished
+  rounds enter history and statistics.
+- Hall of fame fun facts: Prosecco king, top spender, the group's
+  most-rolled drink, category magnet, doubles champion, wrap victim, plus
+  the overall tally.
+- Export/import: share the history as a JSON file (e.g. into the WhatsApp
+  group) or save it locally, and merge files from other phones. The merge
+  is idempotent - rounds are deduplicated by uuid, players matched by
+  name (case-insensitive), so everyone can import everyone's export in
+  any order.
 
 ### Planned
 
 - Menu editing UI (categories, drinks, prices, the pips mapping).
-- History & statistics: who had to drink the Prosecco bottle most often,
-  who spent the most, a per-festival-year leaderboard.
 - Shake-to-roll (accelerometer) and a roll sound effect.
 - Optional extra order items (food, other drinks) added to the summary.
 

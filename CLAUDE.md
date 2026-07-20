@@ -227,12 +227,17 @@ suggestion, adjustable in the app - see open questions):
 
 - ✅ Done: project scaffold, dice logic + tests, app icon, roll UI with
   virtual rolling and manual entry, CI/CD pipeline (v1.0 released), Room
-  persistence with seeded menu, player management ("spielt mit" checkbox
-  selects round participants), round flow with per-player rolls and the
-  grouped order summary (v1.1). Roll results are stored as snapshots -
-  ready for the history/statistics milestone.
-- ⏳ Open: menu editing UI, history/statistics, shake-to-roll + sound,
-  optional extra order items (food, beer) on the summary.
+  persistence with seeded menu, player management, round flow with the
+  grouped order summary (v1.1), history with per-day round list, detail
+  view and year filter, hall-of-fame fun facts (StatsCalculator), JSON
+  export/import with idempotent cross-device merge by round uuid (v1.2).
+- ⏳ Open: menu editing UI, shake-to-roll + sound, optional extra order
+  items (food, beer) on the summary.
+- Decisions: quick rolls ("Schnell würfeln") deliberately do NOT count
+  towards history/statistics - only finished rounds do. Players are
+  matched across devices by trimmed, case-insensitive name. The db is at
+  schema v2 (rounds.uuid unique + roll_results.categorySize); migrations
+  live in AppDatabase and were verified against real v1.1 data.
 
 ## Open questions / to clarify with the group
 
