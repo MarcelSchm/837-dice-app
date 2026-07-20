@@ -30,7 +30,16 @@ class DiceFeedback(context: Context) {
                 .build()
         )
         .build()
-    private val soundId = soundPool.load(context, de.gyrosbande.dice.R.raw.dice_roll, 1)
+    private var loaded = false
+    private var currentStream = 0
+
+    private val soundId = soundPool
+        .also { pool ->
+            // Loading is asynchronous - without this the very first roll
+            // right after app start would stay silent.
+            pool.setOnLoadCompleteListener { _, _, status -> loaded = status == 0 }
+        }
+        .load(context, de.gyrosbande.dice.R.raw.dice_roll, 1)
 
     var soundEnabled by mutableStateOf(prefs.getBoolean("soundEnabled", true))
         private set
@@ -38,10 +47,22 @@ class DiceFeedback(context: Context) {
     fun toggleSound() {
         soundEnabled = !soundEnabled
         prefs.edit().putBoolean("soundEnabled", soundEnabled).apply()
+        if (!soundEnabled) stop()
     }
 
     fun playRoll() {
-        if (soundEnabled) soundPool.play(soundId, 1f, 1f, 1, 0, 1f)
+        if (!soundEnabled || !loaded) return
+        // One roll at a time - a second roll restarts the build-up.
+        stop()
+        currentStream = soundPool.play(soundId, 1f, 1f, 1, 0, 1f)
+    }
+
+    /** Cuts the sound short, e.g. when leaving the screen mid-roll. */
+    fun stop() {
+        if (currentStream != 0) {
+            soundPool.stop(currentStream)
+            currentStream = 0
+        }
     }
 
     fun release() = soundPool.release()
@@ -52,7 +73,10 @@ fun rememberDiceFeedback(): DiceFeedback {
     val context = LocalContext.current
     val feedback = remember { DiceFeedback(context.applicationContext) }
     DisposableEffect(Unit) {
-        onDispose { feedback.release() }
+        onDispose {
+            feedback.stop()
+            feedback.release()
+        }
     }
     return feedback
 }

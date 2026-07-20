@@ -42,14 +42,17 @@ class RollController(
         if (!state.isRolling) state = state.copy(mode = mode, pendingManual = emptyList())
     }
 
-    /** Roll virtually, with a short shake animation before the result. */
+    /**
+     * Roll virtually, tumbling the dice while the roll sound builds up and
+     * revealing the result exactly when it resolves (see [ROLL_ANIMATION_MS]).
+     */
     suspend fun rollVirtual() {
         if (state.isRolling || flow.phase is RollPhase.Finished) return
         val diceCount = flow.requiredDice()
         state = state.copy(isRolling = true, pendingManual = emptyList())
-        repeat(10) {
+        repeat((ROLL_ANIMATION_MS / TICK_MS).toInt()) {
             state = state.copy(shownDice = List(diceCount) { random.nextInt(1, 7) })
-            delay(80)
+            delay(TICK_MS)
         }
         val dice = flow.rollVirtual()
         state = state.copy(phase = flow.phase, shownDice = dice, isRolling = false)
@@ -94,5 +97,15 @@ class RollController(
         if (flow.phase !is RollPhase.Finished) return
         flow.substitute(drink)
         state = state.copy(phase = flow.phase)
+    }
+
+    companion object {
+        /**
+         * Matches the length of the roll sound (res/raw/dice_roll.mp3, a
+         * shake in the cup with a building tension) so the result lands on
+         * its resolution instead of while it is still rattling.
+         */
+        const val ROLL_ANIMATION_MS = 2_000L
+        const val TICK_MS = 80L
     }
 }
