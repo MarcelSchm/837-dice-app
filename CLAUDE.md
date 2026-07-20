@@ -254,6 +254,13 @@ suggestion, adjustable in the app - see open questions):
   applicationId as the phone app, attached to releases as
   `837-dice-wear-vX.Y.apk`). Deliberately unsynced - mirrors the phone's
   quick roll, which never counts towards history.
+- ✅ Also done: unavailable drinks are reported per drink in the summary
+  (everyone who rolled it re-rolls in turn; the drink stays flagged for
+  the round and rolling it again is refused), player names are
+  capitalized and must be unique (`PlayerName` in :core), and the roll
+  sound is the group's own recording (`res/raw/dice_roll.mp3`, ~2 s with
+  a build-up) with the roll animation synced to its length via
+  `RollController.ROLL_ANIMATION_MS`.
 - ⏳ Open: Wear OS phase 2 - Data Layer sync (menu + watch rolls joining
   phone rounds), see docs/WEAR.md.
 - Decisions: quick rolls ("Schnell würfeln") deliberately do NOT count

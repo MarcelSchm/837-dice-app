@@ -129,9 +129,15 @@ and can change (prices/lineup) - the source photos live in `images/`.
   reroll the drink within the same category (the house rule) or pick a
   replacement from the menu by hand - the original rolls stay recorded
   and the result is marked as substituted. This also works late: while
-  the order is read out, tap a player's row in the summary ("Das haben
-  sie nicht") and that player re-rolls or picks a substitute - the
-  recorded result is rewritten in place.
+  the order is read out, tap the *drink* in the summary. The app names
+  everyone who rolled it (three people on one Bacardi is one tap, not
+  three), then walks them through re-rolling one after another. The
+  drink stays flagged for the round, so rolling it again is refused with
+  "Das gibt's immer noch nicht" instead of being accepted. Corrected
+  results are rewritten in place, keeping player and turn order.
+- Player names are capitalized automatically and have to be unique - with
+  two Marcels in the group, one becomes "Marcel S", so every name in the
+  order summary points at exactly one person.
 - Rounds can be deleted from the history (list and detail view, with a
   confirmation). Note: importing an older export file that still contains
   a deleted round brings it back - that's inherent to the merge design.
