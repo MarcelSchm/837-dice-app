@@ -95,7 +95,8 @@ fun HistoryDetailScreen(viewModel: HistoryViewModel, uuid: String?, onBack: () -
         val drinks = round.results.map { it.drink }
         OrderCard(
             lines = OrderSummary.linesOfDrinks(drinks),
-            totalCents = OrderSummary.totalCentsOfDrinks(drinks),
+            totalCents = round.totalCents,
+            extras = round.extras,
         )
         Spacer(Modifier.height(24.dp))
 
