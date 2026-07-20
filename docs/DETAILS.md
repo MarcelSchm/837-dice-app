@@ -133,11 +133,19 @@ and can change (prices/lineup) - the source photos live in `images/`.
   confirmation). Note: importing an older export file that still contains
   a deleted round brings it back - that's inherent to the merge design.
 
+- Menu editing: categories can be renamed, their pip number reassigned
+  (swaps with the holder), drinks can be added, edited, deleted and
+  reordered (order = roll order!), and the whole menu can be reset to the
+  original San Remo card.
+- Extra order items: food and other drinks can be added to a round's
+  summary by hand (label, price, quantity), counted into the total and
+  the history, and shared via export/import.
+- Shake-to-roll: shaking the phone rolls the virtual dice (like a dice
+  cup), with a dice-rattle sound effect that can be muted.
+
 ### Planned
 
-- Menu editing UI (categories, drinks, prices, the pips mapping).
-- Shake-to-roll (accelerometer) and a roll sound effect.
-- Optional extra order items (food, other drinks) added to the summary.
+- Wear OS companion app for the Pixel Watch - see [WEAR.md](WEAR.md).
 
 ## Architecture
 

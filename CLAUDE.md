@@ -244,9 +244,11 @@ suggestion, adjustable in the app - see open questions):
   export/import with idempotent cross-device merge by round uuid (v1.2),
   unavailable-drink handling (reroll within the same category or manual
   substitute, marked in history; schema v3) and git-cliff release notes
-  (v1.3).
-- ⏳ Open: menu editing UI, shake-to-roll + sound, optional extra order
-  items (food, beer) on the summary.
+  (v1.3), round deletion + auto-changelog (v1.4), menu editing (rename,
+  pip swap, drink CRUD + reorder, reset to seed), extra order items on
+  the summary (schema v4, in export format), shake-to-roll with a
+  synthesized dice sound (mutable via 🔊 toggle) (v1.5).
+- ⏳ Open: Wear OS companion app (concept in docs/WEAR.md).
 - Decisions: quick rolls ("Schnell würfeln") deliberately do NOT count
   towards history/statistics - only finished rounds do. Players are
   matched across devices by trimmed, case-insensitive name. The db is at
