@@ -3,6 +3,20 @@
 All notable changes to 837 Dice. Generated from
 [Conventional Commits](https://www.conventionalcommits.org) with
 [git-cliff](https://git-cliff.org).
+## [2.1] - 2026-07-20
+
+### 🎲 New
+- Add standalone Wear OS quick-roll app (phase 1)
+- Fix a rolled drink from the order summary
+
+### 🔧 Changed
+- Extract the pure game logic into a shared :core module
+
+### ⚙️ CI
+- Attach the wear APK to releases and document the watch app
+
+### Other
+- Merge branch 'main' of https://github.com/MarcelSchm/837-dice-app
 ## [2.0] - 2026-07-20
 
 ### 🎲 New
