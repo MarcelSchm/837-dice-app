@@ -3,6 +3,23 @@
 All notable changes to 837 Dice. Generated from
 [Conventional Commits](https://www.conventionalcommits.org) with
 [git-cliff](https://git-cliff.org).
+## [2.0] - 2026-07-20
+
+### 🎲 New
+- Add manual extra order items to the round summary
+- Make the drinks menu editable in the app
+- Add shake-to-roll and a dice rattle sound
+- Show extra order items in the history detail
+
+### 📚 Documentation
+- Add Pixel Watch companion concept and update feature status
+## [1.5] - 2026-07-20
+
+### ⚙️ CI
+- Derive app version from the release tag instead of a manual bump
+
+### 🧪 Tests
+- Cover import/export edge cases (invalid files, merge corners)
 ## [1.4] - 2026-07-20
 
 ### 🎲 New
