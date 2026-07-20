@@ -129,6 +129,9 @@ and can change (prices/lineup) - the source photos live in `images/`.
   reroll the drink within the same category (the house rule) or pick a
   replacement from the menu by hand - the original rolls stay recorded
   and the result is marked as substituted.
+- Rounds can be deleted from the history (list and detail view, with a
+  confirmation). Note: importing an older export file that still contains
+  a deleted round brings it back - that's inherent to the merge design.
 
 ### Planned
 

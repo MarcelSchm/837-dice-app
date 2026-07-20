@@ -95,6 +95,10 @@ class HistoryViewModel(private val app: DiceApp) : ViewModel() {
         }
     }
 
+    fun deleteRound(uuid: String) {
+        viewModelScope.launch { app.historyRepository.deleteRound(uuid) }
+    }
+
     fun dismissDialogs() {
         importReport = null
         errorMessage = null

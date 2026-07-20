@@ -14,9 +14,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Tab
@@ -27,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -53,6 +58,7 @@ fun HistoryScreen(viewModel: HistoryViewModel, onOpenRound: (String) -> Unit, on
     val allRounds by viewModel.rounds.collectAsState()
     val rounds = viewModel.filtered(allRounds)
     var tab by remember { mutableIntStateOf(0) }
+    var roundToDelete by remember { mutableStateOf<HistoryRound?>(null) }
     val context = LocalContext.current
 
     val saveLauncher = rememberLauncherForActivityResult(
@@ -116,6 +122,7 @@ fun HistoryScreen(viewModel: HistoryViewModel, onOpenRound: (String) -> Unit, on
                     },
                     onSave = { saveLauncher.launch(viewModel.exportFileName()) },
                     onImport = { importLauncher.launch(arrayOf("*/*")) },
+                    onDeleteRequest = { roundToDelete = it },
                 )
             } else {
                 StatsTab(rounds)
@@ -126,6 +133,34 @@ fun HistoryScreen(viewModel: HistoryViewModel, onOpenRound: (String) -> Unit, on
         OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
             Text("Zurück")
         }
+    }
+
+    roundToDelete?.let { round ->
+        AlertDialog(
+            onDismissRequest = { roundToDelete = null },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteRound(round.uuid)
+                        roundToDelete = null
+                    },
+                ) {
+                    Text("Löschen", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { roundToDelete = null }) { Text("Abbrechen") }
+            },
+            title = { Text("Runde löschen?") },
+            text = {
+                Text(
+                    "${timeFormat.format(Date(round.startedAt))} Uhr, " +
+                        "${round.results.map { it.playerName }.distinct().joinToString(", ")}. " +
+                        "Das lässt sich nicht rückgängig machen. Beim Import einer " +
+                        "älteren Export-Datei kann die Runde allerdings zurückkommen."
+                )
+            },
+        )
     }
 
     viewModel.importReport?.let { report ->
@@ -165,6 +200,7 @@ private fun RoundsTab(
     onShare: () -> Unit,
     onSave: () -> Unit,
     onImport: () -> Unit,
+    onDeleteRequest: (HistoryRound) -> Unit,
 ) {
     Column {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -205,7 +241,11 @@ private fun RoundsTab(
                     )
                 }
                 items(dayRounds, key = { it.uuid }) { round ->
-                    RoundListItem(round, onClick = { onOpenRound(round.uuid) })
+                    RoundListItem(
+                        round = round,
+                        onClick = { onOpenRound(round.uuid) },
+                        onDelete = { onDeleteRequest(round) },
+                    )
                 }
             }
         }
@@ -213,7 +253,7 @@ private fun RoundsTab(
 }
 
 @Composable
-private fun RoundListItem(round: HistoryRound, onClick: () -> Unit) {
+private fun RoundListItem(round: HistoryRound, onClick: () -> Unit, onDelete: () -> Unit) {
     Card(modifier = Modifier
         .fillMaxWidth()
         .clickable(onClick = onClick)
@@ -221,7 +261,7 @@ private fun RoundListItem(round: HistoryRound, onClick: () -> Unit) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
@@ -240,6 +280,13 @@ private fun RoundListItem(round: HistoryRound, onClick: () -> Unit) {
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary,
             )
+            IconButton(onClick = onDelete) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Runde löschen",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }

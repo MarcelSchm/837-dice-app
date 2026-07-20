@@ -84,4 +84,8 @@ interface RoundDao {
 
     @Query("SELECT uuid FROM rounds")
     suspend fun allRoundUuids(): List<String>
+
+    /** Deletes the round; its results follow via the CASCADE foreign key. */
+    @Query("DELETE FROM rounds WHERE uuid = :uuid")
+    suspend fun deleteRoundByUuid(uuid: String)
 }

@@ -26,6 +26,13 @@ class HistoryRepository(private val database: AppDatabase) {
     fun observeHistory(): Flow<List<HistoryRound>> =
         roundDao.observeFinishedRounds().map { rows -> rows.map { it.toDomain() } }
 
+    /**
+     * Deletes a round (and its results) permanently. Note: importing an
+     * older export file that still contains the round will bring it back -
+     * that's inherent to the idempotent merge design.
+     */
+    suspend fun deleteRound(uuid: String) = roundDao.deleteRoundByUuid(uuid)
+
     suspend fun buildExport(appVersion: String): HistoryExport =
         HistoryExport(
             exportedAt = System.currentTimeMillis(),
