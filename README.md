@@ -32,11 +32,9 @@ Release notes are generated automatically from the
 [Conventional Commit](https://www.conventionalcommits.org) messages with
 [git-cliff](https://git-cliff.org) (config: `cliff.toml`), so users can
 see what changed between versions - see [CHANGELOG.md](CHANGELOG.md) for
-the full history. To refresh the changelog file before tagging:
-
-```bash
-git cliff --tag v1.3 -o CHANGELOG.md
-```
+the full history. After the release, CI also regenerates `CHANGELOG.md`
+and pushes it to `main` as a bot commit - run `git pull` afterwards to
+get it locally.
 
 Signing is covered in [docs/SIGNING.md](docs/SIGNING.md).
 
