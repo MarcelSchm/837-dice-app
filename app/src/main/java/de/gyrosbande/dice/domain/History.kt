@@ -16,6 +16,8 @@ data class HistoryResult(
     val drinkRolls: List<Int>,
     /** Drinks in the category at roll time; 0 = unknown (pre-v2 data). */
     val categorySize: Int,
+    /** True when the rolled drink was unavailable and replaced by hand. */
+    val substituted: Boolean = false,
     val wasVirtual: Boolean,
 ) {
     val drink: Drink get() = Drink(drinkName, priceCents, sizeLabel)

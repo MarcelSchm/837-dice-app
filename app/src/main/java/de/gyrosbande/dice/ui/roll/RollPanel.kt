@@ -1,5 +1,6 @@
 package de.gyrosbande.dice.ui.roll
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -10,6 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -19,12 +23,19 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import de.gyrosbande.dice.domain.Category
+import de.gyrosbande.dice.domain.Drink
 import de.gyrosbande.dice.domain.RollPhase
 import de.gyrosbande.dice.ui.DiceFace
 
@@ -79,7 +90,9 @@ fun ColumnScope.RollPanel(
     when (phase) {
         is RollPhase.Finished -> {
             ResultCard(phase)
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(8.dp))
+            NotAvailableSection(controller)
+            Spacer(Modifier.height(8.dp))
             resultActions(phase)
         }
         else -> {
@@ -160,6 +173,102 @@ fun ColumnScope.RollPanel(
     }
 }
 
+/**
+ * San Remo is out of the rolled drink: offer the house rule (reroll the
+ * drink within the same category) or picking a replacement by hand.
+ */
+@Composable
+private fun ColumnScope.NotAvailableSection(controller: RollController) {
+    var expanded by remember { mutableStateOf(false) }
+    var showPicker by remember { mutableStateOf(false) }
+
+    TextButton(onClick = { expanded = !expanded }) {
+        Text("Getränk nicht da? 🙃")
+    }
+    if (expanded) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            OutlinedButton(
+                onClick = {
+                    expanded = false
+                    controller.rerollDrink()
+                },
+                modifier = Modifier.weight(1f),
+            ) {
+                Text("Neu würfeln 🎲")
+            }
+            OutlinedButton(
+                onClick = { showPicker = true },
+                modifier = Modifier.weight(1f),
+            ) {
+                Text("Selbst wählen 📋")
+            }
+        }
+        Text(
+            "Neu gewürfelt wird in derselben Kategorie.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+
+    if (showPicker) {
+        SubstitutePickerDialog(
+            categories = controller.categories,
+            onPick = { drink ->
+                controller.substitute(drink)
+                showPicker = false
+                expanded = false
+            },
+            onDismiss = { showPicker = false },
+        )
+    }
+}
+
+@Composable
+private fun SubstitutePickerDialog(
+    categories: List<Category>,
+    onPick: (Drink) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Abbrechen") }
+        },
+        title = { Text("Ersatz wählen") },
+        text = {
+            LazyColumn(modifier = Modifier.height(420.dp)) {
+                categories.forEach { category ->
+                    item(key = "header-${category.diceNumber}") {
+                        Text(
+                            category.name,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
+                        )
+                    }
+                    items(category.drinks, key = { "${category.diceNumber}-${it.name}-${it.sizeLabel}" }) { drink ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onPick(drink) }
+                                .padding(vertical = 10.dp),
+                        ) {
+                            Text(drink.name, modifier = Modifier.weight(1f))
+                            Text(
+                                drink.priceFormatted,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+            }
+        },
+    )
+}
+
 @Composable
 private fun ResultCard(phase: RollPhase.Finished) {
     val outcome = phase.outcome
@@ -190,8 +299,9 @@ private fun ResultCard(phase: RollPhase.Finished) {
                 color = MaterialTheme.colorScheme.onPrimary,
             )
             Spacer(Modifier.height(8.dp))
+            val rollInfo = "${outcome.category.name} · Wurf ${outcome.categoryRoll} + ${outcome.drinkRolls.joinToString("+")}"
             Text(
-                "${outcome.category.name} · Wurf ${outcome.categoryRoll} + ${outcome.drinkRolls.joinToString("+")}",
+                if (outcome.substituted) "$rollInfo · von Hand ersetzt" else rollInfo,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onPrimary,
             )

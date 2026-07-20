@@ -8,6 +8,8 @@ data class RollOutcome(
     val drink: Drink,
     val categoryRoll: Int,
     val drinkRolls: List<Int>,
+    /** True when the rolled drink was unavailable and replaced by hand. */
+    val substituted: Boolean = false,
 ) {
     val drinkRollTotal: Int get() = drinkRolls.sum()
 }
@@ -57,6 +59,25 @@ class GameFlow(
         check(dice.isNotEmpty()) { "Round is already finished" }
         advance(dice)
         return dice
+    }
+
+    /**
+     * San Remo is out of the rolled drink: roll the drink again within the
+     * same category (that's the house rule - the category stays).
+     */
+    fun rerollDrink() {
+        val p = phase as? RollPhase.Finished ?: error("No finished roll to reroll")
+        phase = RollPhase.DrinkRoll(p.outcome.category, p.outcome.categoryRoll)
+    }
+
+    /**
+     * San Remo is out of the rolled drink: replace it by hand (e.g. Grog
+     * instead of Glühwein). The original rolls stay recorded, the outcome
+     * is marked as substituted.
+     */
+    fun substitute(drink: Drink) {
+        val p = phase as? RollPhase.Finished ?: error("No finished roll to substitute")
+        phase = RollPhase.Finished(p.outcome.copy(drink = drink, substituted = true))
     }
 
     /**

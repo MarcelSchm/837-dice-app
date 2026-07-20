@@ -75,6 +75,7 @@ class HistoryRepository(private val database: AppDatabase) {
                         categoryRoll = result.categoryRoll,
                         drinkRolls = result.drinkRolls.joinToString(","),
                         categorySize = result.categorySize,
+                        substituted = result.substituted,
                         wasVirtual = result.wasVirtual,
                         createdAt = result.createdAt,
                     )
@@ -99,6 +100,7 @@ class HistoryRepository(private val database: AppDatabase) {
                 categoryRoll = result.categoryRoll,
                 drinkRolls = result.drinkRolls.split(",").mapNotNull { it.toIntOrNull() },
                 categorySize = result.categorySize,
+                substituted = result.substituted,
                 wasVirtual = result.wasVirtual,
             )
         },
@@ -118,6 +120,7 @@ class HistoryRepository(private val database: AppDatabase) {
                 categoryRoll = result.categoryRoll,
                 drinkRolls = result.drinkRolls.split(",").mapNotNull { it.toIntOrNull() },
                 categorySize = result.categorySize,
+                substituted = result.substituted,
                 wasVirtual = result.wasVirtual,
                 createdAt = result.createdAt,
             )

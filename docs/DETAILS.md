@@ -125,6 +125,10 @@ and can change (prices/lineup) - the source photos live in `images/`.
   is idempotent - rounds are deduplicated by uuid, players matched by
   name (case-insensitive), so everyone can import everyone's export in
   any order.
+- Unavailable drinks: if San Remo is out of the rolled drink, either
+  reroll the drink within the same category (the house rule) or pick a
+  replacement from the menu by hand - the original rolls stay recorded
+  and the result is marked as substituted.
 
 ### Planned
 

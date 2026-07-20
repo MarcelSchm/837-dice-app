@@ -32,6 +32,7 @@ class RoundRepository(private val roundDao: RoundDao) {
                 categoryRoll = outcome.categoryRoll,
                 drinkRolls = outcome.drinkRolls.joinToString(","),
                 categorySize = outcome.category.drinks.size,
+                substituted = outcome.substituted,
                 wasVirtual = wasVirtual,
                 createdAt = System.currentTimeMillis(),
             )

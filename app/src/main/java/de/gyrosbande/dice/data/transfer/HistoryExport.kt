@@ -54,6 +54,7 @@ data class ExportResult(
     val categoryRoll: Int,
     val drinkRolls: List<Int>,
     val categorySize: Int = 0,
+    val substituted: Boolean = false,
     val wasVirtual: Boolean,
     val createdAt: Long,
 )

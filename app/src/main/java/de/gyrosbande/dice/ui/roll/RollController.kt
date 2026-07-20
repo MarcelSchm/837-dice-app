@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import de.gyrosbande.dice.domain.Category
+import de.gyrosbande.dice.domain.Drink
 import de.gyrosbande.dice.domain.GameFlow
 import de.gyrosbande.dice.domain.RollPhase
 import kotlinx.coroutines.delay
@@ -28,7 +29,8 @@ data class RollState(
  * experience is identical everywhere.
  */
 class RollController(
-    categories: List<Category>,
+    /** The full menu; also shown in the substitute picker. */
+    val categories: List<Category>,
     private val random: Random = Random.Default,
 ) {
     private val flow = GameFlow(categories, random)
@@ -69,5 +71,19 @@ class RollController(
     fun reset() {
         flow.reset()
         state = RollState(mode = state.mode)
+    }
+
+    /** Drink unavailable: roll the drink again in the same category. */
+    fun rerollDrink() {
+        if (flow.phase !is RollPhase.Finished) return
+        flow.rerollDrink()
+        state = state.copy(phase = flow.phase, shownDice = emptyList(), pendingManual = emptyList())
+    }
+
+    /** Drink unavailable: replace it by hand from the menu. */
+    fun substitute(drink: Drink) {
+        if (flow.phase !is RollPhase.Finished) return
+        flow.substitute(drink)
+        state = state.copy(phase = flow.phase)
     }
 }

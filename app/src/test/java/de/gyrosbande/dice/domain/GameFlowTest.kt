@@ -78,6 +78,49 @@ class GameFlowTest {
     }
 
     @Test
+    fun `reroll keeps the category and rolls the drink again`() {
+        val flow = GameFlow()
+        flow.enterManual(listOf(3)) // Bitter
+        flow.enterManual(listOf(2)) // Averna
+        assertTrue(flow.phase is RollPhase.Finished)
+
+        flow.rerollDrink()
+        val phase = flow.phase as RollPhase.DrinkRoll
+        assertEquals("Bitter", phase.category.name)
+        assertEquals(3, phase.categoryRoll)
+
+        flow.enterManual(listOf(4))
+        val done = flow.phase as RollPhase.Finished
+        assertEquals("Fernet Branca 42 %", done.outcome.drink.name)
+        assertTrue(!done.outcome.substituted)
+    }
+
+    @Test
+    fun `substitute swaps the drink and marks the outcome`() {
+        val flow = GameFlow()
+        flow.enterManual(listOf(2)) // Rum & Spezial
+        flow.enterManual(listOf(5)) // Glühwein
+        val grog = MenuSeed.categoryFor(2).drinks.first { it.name == "Grog" }
+
+        flow.substitute(grog)
+        val done = flow.phase as RollPhase.Finished
+        assertEquals("Grog", done.outcome.drink.name)
+        assertTrue(done.outcome.substituted)
+        // The original rolls stay recorded
+        assertEquals(listOf(5), done.outcome.drinkRolls)
+        assertEquals(2, done.outcome.categoryRoll)
+    }
+
+    @Test
+    fun `reroll and substitute require a finished roll`() {
+        val flow = GameFlow()
+        assertThrows(IllegalStateException::class.java) { flow.rerollDrink() }
+        assertThrows(IllegalStateException::class.java) {
+            flow.substitute(MenuSeed.categoryFor(2).drinks.first())
+        }
+    }
+
+    @Test
     fun `every menu category is reachable and playable`() {
         for (n in 1..6) {
             val flow = GameFlow()

@@ -93,6 +93,8 @@ data class RollResultEntity(
      * rolls in the statistics. 0 = unknown (rows from before schema v2).
      */
     val categorySize: Int = 0,
+    /** True when the rolled drink was unavailable and replaced by hand. */
+    val substituted: Boolean = false,
     val wasVirtual: Boolean,
     val createdAt: Long,
 )

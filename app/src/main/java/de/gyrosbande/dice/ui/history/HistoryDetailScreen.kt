@@ -72,9 +72,11 @@ fun HistoryDetailScreen(viewModel: HistoryViewModel, uuid: String?, onBack: () -
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
+                        val substitutedHint = if (result.substituted) ", von Hand ersetzt" else ""
                         Text(
                             "${result.drinkName} (${result.categoryName}, " +
-                                "Wurf ${result.categoryRoll} + ${result.drinkRolls.joinToString("+")})",
+                                "Wurf ${result.categoryRoll} + ${result.drinkRolls.joinToString("+")}" +
+                                "$substitutedHint)",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
