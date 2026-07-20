@@ -19,13 +19,17 @@ whole bottle of Prosecco. Rules are rules. 🍾
 
 ## 🚀 Publish a new version
 
-Bump `versionName`/`versionCode` in `app/build.gradle.kts`, commit, then
-tag and push:
+Just tag and push - no file to edit, no version to bump by hand:
 
 ```bash
-git tag v1.3
-git push origin v1.3
+git tag v1.5
+git push origin v1.5
 ```
+
+The tag itself **is** the version: CI reads it and sets `versionName`
+(`"1.5"`) and a matching `versionCode` when it builds the release APK (see
+the comment above `defaultConfig` in `app/build.gradle.kts`). Tags must
+look like `vX.Y` or `vX.Y.Z` for this to work.
 
 The pipeline builds, tests and attaches the APK to a GitHub release.
 Release notes are generated automatically from the
@@ -58,9 +62,11 @@ Signing is covered in [docs/SIGNING.md](docs/SIGNING.md).
    Generate Signed Bundle / APK…** → APK → point it at your keystore (see
    [docs/SIGNING.md](docs/SIGNING.md)) → choose the `release` build
    variant.
-6. Change the app version before building: open
-   `app/build.gradle.kts` in the project tree and bump `versionCode` /
-   `versionName` in `defaultConfig`.
+6. Version numbers are derived automatically from the git tag at CI build
+   time (see "Publish a new version" above) - local builds always show
+   `0.0-dev`. To build locally with a specific version, set `RELEASE_TAG`
+   before invoking Gradle, e.g.
+   `$env:RELEASE_TAG = 'v1.5'; .\gradlew.bat assembleRelease`.
 
 ### From the command line
 

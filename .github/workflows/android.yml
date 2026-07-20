@@ -57,6 +57,10 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          # Only matches on real "vX.Y[.Z]" tag builds - app/build.gradle.kts
+          # derives versionCode/versionName from this. On branch/PR builds
+          # ref_name isn't a matching tag, so it falls back to a dev version.
+          RELEASE_TAG: ${{ github.ref_name }}
         run: ./gradlew assembleRelease
 
       - name: Rename APK

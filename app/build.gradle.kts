@@ -6,6 +6,30 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+// The app version is derived from the git tag that triggered the release
+// build (see .github/workflows/android.yml's "Build APK" step), not hand-
+// bumped here. CI passes RELEASE_TAG="v1.5" (or "v1.5.2") as an env var
+// when building from a `v*` tag; local/non-tag builds (plain `gradlew
+// assembleRelease`, pushes to main, PRs) fall back to a fixed dev version.
+// versionCode = major*10_000 + minor*100 + patch, which keeps increasing
+// as long as tags increase - required for clean app updates.
+val releaseTagMatch = System.getenv("RELEASE_TAG")
+    ?.let { Regex("""^v(\d+)\.(\d+)(?:\.(\d+))?$""").find(it) }
+
+val appVersionName: String = releaseTagMatch?.let {
+    val major = it.groupValues[1]
+    val minor = it.groupValues[2]
+    val patch = it.groupValues[3].toIntOrNull() ?: 0
+    if (patch == 0) "$major.$minor" else "$major.$minor.$patch"
+} ?: "0.0-dev"
+
+val appVersionCode: Int = releaseTagMatch?.let {
+    val major = it.groupValues[1].toInt()
+    val minor = it.groupValues[2].toInt()
+    val patch = it.groupValues[3].toIntOrNull() ?: 0
+    major * 10_000 + minor * 100 + patch
+} ?: 1
+
 android {
     namespace = "de.gyrosbande.dice"
     compileSdk = 36
@@ -14,8 +38,8 @@ android {
         applicationId = "de.gyrosbande.dice"
         minSdk = 26
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.4"
+        versionCode = appVersionCode
+        versionName = appVersionName
     }
 
     // CI signing: when the environment variables (GitHub secrets) are set,
