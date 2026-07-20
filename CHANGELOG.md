@@ -3,6 +3,13 @@
 All notable changes to 837 Dice. Generated from
 [Conventional Commits](https://www.conventionalcommits.org) with
 [git-cliff](https://git-cliff.org).
+## [1.4] - 2026-07-20
+
+### 🎲 New
+- Allow deleting rounds from the history
+
+### ⚙️ CI
+- Auto-update CHANGELOG.md after release tags
 ## [1.3] - 2026-07-20
 
 ### 🎲 New
