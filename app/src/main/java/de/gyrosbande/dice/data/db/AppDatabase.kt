@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [
@@ -13,7 +15,7 @@ import androidx.room.RoomDatabase
         RoundEntity::class,
         RollResultEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -22,6 +24,21 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun roundDao(): RoundDao
 
     companion object {
+        /**
+         * v1 -> v2: rounds get a globally unique uuid (for cross-device
+         * history merging); roll results record the category size at roll
+         * time (for the wrap statistic; 0 = unknown for old rows).
+         */
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE rounds ADD COLUMN uuid TEXT NOT NULL DEFAULT ''")
+                // Backfill existing rounds with random ids.
+                db.execSQL("UPDATE rounds SET uuid = lower(hex(randomblob(16)))")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_rounds_uuid ON rounds(uuid)")
+                db.execSQL("ALTER TABLE roll_results ADD COLUMN categorySize INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         @Volatile
         private var instance: AppDatabase? = null
 
@@ -31,7 +48,10 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "dice837.db",
-                ).build().also { instance = it }
+                )
+                    .addMigrations(MIGRATION_1_2)
+                    .build()
+                    .also { instance = it }
             }
     }
 }

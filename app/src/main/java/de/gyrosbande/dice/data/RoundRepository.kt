@@ -4,12 +4,18 @@ import de.gyrosbande.dice.data.db.RollResultEntity
 import de.gyrosbande.dice.data.db.RoundDao
 import de.gyrosbande.dice.data.db.RoundEntity
 import de.gyrosbande.dice.domain.PlayerOutcome
+import java.util.UUID
 
 class RoundRepository(private val roundDao: RoundDao) {
 
     /** Starts a new round and returns its id. */
     suspend fun startRound(): Long =
-        roundDao.insertRound(RoundEntity(startedAt = System.currentTimeMillis()))
+        roundDao.insertRound(
+            RoundEntity(
+                uuid = UUID.randomUUID().toString(),
+                startedAt = System.currentTimeMillis(),
+            )
+        )
 
     /** Persists one player's result as a snapshot (see [RollResultEntity]). */
     suspend fun saveResult(roundId: Long, result: PlayerOutcome, wasVirtual: Boolean) {
@@ -25,6 +31,7 @@ class RoundRepository(private val roundDao: RoundDao) {
                 priceCents = outcome.drink.priceCents,
                 categoryRoll = outcome.categoryRoll,
                 drinkRolls = outcome.drinkRolls.joinToString(","),
+                categorySize = outcome.category.drinks.size,
                 wasVirtual = wasVirtual,
                 createdAt = System.currentTimeMillis(),
             )

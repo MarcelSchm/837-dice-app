@@ -1,6 +1,7 @@
 package de.gyrosbande.dice
 
 import android.app.Application
+import de.gyrosbande.dice.data.HistoryRepository
 import de.gyrosbande.dice.data.MenuRepository
 import de.gyrosbande.dice.data.PlayerRepository
 import de.gyrosbande.dice.data.RoundRepository
@@ -16,4 +17,5 @@ class DiceApp : Application() {
     val menuRepository: MenuRepository by lazy { MenuRepository(database.menuDao()) }
     val playerRepository: PlayerRepository by lazy { PlayerRepository(database.playerDao()) }
     val roundRepository: RoundRepository by lazy { RoundRepository(database.roundDao()) }
+    val historyRepository: HistoryRepository by lazy { HistoryRepository(database) }
 }

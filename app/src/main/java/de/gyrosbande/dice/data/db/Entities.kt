@@ -44,9 +44,17 @@ data class PlayerEntity(
     val isActive: Boolean = true,
 )
 
-@Entity(tableName = "rounds")
+@Entity(
+    tableName = "rounds",
+    indices = [Index(value = ["uuid"], unique = true)],
+)
 data class RoundEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    /**
+     * Globally unique id, generated on the device that created the round.
+     * Lets history exports merge across devices without duplicates.
+     */
+    val uuid: String,
     val startedAt: Long,
     val finishedAt: Long? = null,
 )
@@ -80,6 +88,11 @@ data class RollResultEntity(
     val categoryRoll: Int,
     /** Pip values of the drink roll, comma-separated (e.g. "4,5"). */
     val drinkRolls: String,
+    /**
+     * Number of drinks the category had at roll time; needed to detect wrap
+     * rolls in the statistics. 0 = unknown (rows from before schema v2).
+     */
+    val categorySize: Int = 0,
     val wasVirtual: Boolean,
     val createdAt: Long,
 )

@@ -37,6 +37,9 @@ interface PlayerDao {
     @Query("SELECT * FROM players ORDER BY id")
     fun observePlayers(): Flow<List<PlayerEntity>>
 
+    @Query("SELECT * FROM players ORDER BY id")
+    suspend fun players(): List<PlayerEntity>
+
     @Query("SELECT * FROM players WHERE isActive = 1 ORDER BY id")
     suspend fun activePlayers(): List<PlayerEntity>
 
@@ -50,6 +53,12 @@ interface PlayerDao {
     suspend fun delete(player: PlayerEntity)
 }
 
+data class RoundWithResults(
+    @Embedded val round: RoundEntity,
+    @Relation(parentColumn = "id", entityColumn = "roundId")
+    val results: List<RollResultEntity>,
+)
+
 @Dao
 interface RoundDao {
     @Insert
@@ -58,6 +67,21 @@ interface RoundDao {
     @Insert
     suspend fun insertResult(result: RollResultEntity)
 
+    @Insert
+    suspend fun insertResults(results: List<RollResultEntity>)
+
     @Query("UPDATE rounds SET finishedAt = :finishedAt WHERE id = :roundId")
     suspend fun finishRound(roundId: Long, finishedAt: Long)
+
+    /** Only finished rounds count for history, statistics and export. */
+    @Transaction
+    @Query("SELECT * FROM rounds WHERE finishedAt IS NOT NULL ORDER BY startedAt DESC")
+    fun observeFinishedRounds(): Flow<List<RoundWithResults>>
+
+    @Transaction
+    @Query("SELECT * FROM rounds WHERE finishedAt IS NOT NULL ORDER BY startedAt DESC")
+    suspend fun finishedRounds(): List<RoundWithResults>
+
+    @Query("SELECT uuid FROM rounds")
+    suspend fun allRoundUuids(): List<String>
 }
