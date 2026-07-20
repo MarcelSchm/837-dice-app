@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import de.gyrosbande.dice.data.MenuRepository
 import de.gyrosbande.dice.data.PlayerRepository
 import de.gyrosbande.dice.data.RoundRepository
+import de.gyrosbande.dice.domain.ExtraItem
 import de.gyrosbande.dice.domain.Player
 import de.gyrosbande.dice.domain.PlayerOutcome
 import de.gyrosbande.dice.domain.RollPhase
@@ -40,6 +41,10 @@ class RoundViewModel(
     var results by mutableStateOf<List<PlayerOutcome>>(emptyList())
         private set
 
+    /** Manually added order lines (food, beer ...) with their row ids. */
+    var extras by mutableStateOf<List<Pair<Long, ExtraItem>>>(emptyList())
+        private set
+
     val players: List<Player> get() = session?.players ?: emptyList()
     val currentPlayer: Player? get() = session?.players?.getOrNull(results.size)
     val isFinished: Boolean get() = session != null && results.size == players.size
@@ -57,6 +62,23 @@ class RoundViewModel(
 
     fun rollVirtual() {
         viewModelScope.launch { controller?.rollVirtual() }
+    }
+
+    /** Add a manual order line (food, beer ...) to the round. */
+    fun addExtra(extra: ExtraItem) {
+        viewModelScope.launch {
+            val id = roundId ?: roundRepository.startRound().also { roundId = it }
+            val rowId = roundRepository.addExtra(id, extra)
+            extras = extras + (rowId to extra)
+        }
+    }
+
+    fun removeExtra(index: Int) {
+        val (rowId, _) = extras.getOrNull(index) ?: return
+        viewModelScope.launch {
+            roundRepository.removeExtra(rowId)
+            extras = extras.filterIndexed { i, _ -> i != index }
+        }
     }
 
     /** Save the current player's finished roll and advance to the next one. */

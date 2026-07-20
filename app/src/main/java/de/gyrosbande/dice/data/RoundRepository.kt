@@ -1,8 +1,10 @@
 package de.gyrosbande.dice.data
 
+import de.gyrosbande.dice.data.db.ExtraOrderItemEntity
 import de.gyrosbande.dice.data.db.RollResultEntity
 import de.gyrosbande.dice.data.db.RoundDao
 import de.gyrosbande.dice.data.db.RoundEntity
+import de.gyrosbande.dice.domain.ExtraItem
 import de.gyrosbande.dice.domain.PlayerOutcome
 import java.util.UUID
 
@@ -41,4 +43,18 @@ class RoundRepository(private val roundDao: RoundDao) {
 
     suspend fun finishRound(roundId: Long) =
         roundDao.finishRound(roundId, System.currentTimeMillis())
+
+    /** Adds a manual order line (food, beer ...) and returns its row id. */
+    suspend fun addExtra(roundId: Long, extra: ExtraItem): Long =
+        roundDao.insertExtra(
+            ExtraOrderItemEntity(
+                roundId = roundId,
+                label = extra.label,
+                priceCents = extra.priceCents,
+                quantity = extra.quantity,
+                createdAt = System.currentTimeMillis(),
+            )
+        )
+
+    suspend fun removeExtra(extraId: Long) = roundDao.deleteExtraById(extraId)
 }

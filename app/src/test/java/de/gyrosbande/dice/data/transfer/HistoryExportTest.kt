@@ -90,6 +90,36 @@ class HistoryExportTest {
         assertTrue(decoded.rounds.single().results[1].substituted)
     }
 
+    @Test
+    fun `roundtrip preserves extra order items`() {
+        val original = sampleExport().copy(
+            rounds = listOf(
+                sampleExport().rounds.single().copy(
+                    extraItems = listOf(
+                        ExportExtraItem("Menü 837", 850, 2, createdAt = 1_500L),
+                        ExportExtraItem("Cola", 300, 1, createdAt = 1_600L),
+                    ),
+                )
+            ),
+        )
+        val decoded = HistoryExport.fromJson(HistoryExport.toJson(original))
+        assertEquals(original, decoded)
+    }
+
+    @Test
+    fun `files without extraItems from older versions decode with an empty list`() {
+        val json = """
+            {
+              "exportedAt": 1000, "appVersion": "1.4", "players": [],
+              "rounds": [{
+                "uuid": "round-1", "startedAt": 1000, "finishedAt": 2000,
+                "results": []
+              }]
+            }
+        """.trimIndent()
+        assertTrue(HistoryExport.fromJson(json).rounds.single().extraItems.isEmpty())
+    }
+
     // --- Invalid input --------------------------------------------------
 
     @Test

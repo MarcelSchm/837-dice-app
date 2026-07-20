@@ -49,7 +49,9 @@ object StatsCalculator {
         return Stats(
             roundCount = rounds.size,
             rollCount = results.size,
-            totalCents = results.sumOf { it.priceCents },
+            // Includes manually added extras (food, beer ...) - it's what
+            // the table actually paid.
+            totalCents = rounds.sumOf { it.totalCents },
             proseccoKing = topByCount(results.filter { it.drinkName == PROSECCO_BOTTLE }),
             topSpender = topSpender(results),
             favoriteDrink = favoriteDrink(results),

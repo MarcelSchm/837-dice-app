@@ -22,6 +22,10 @@ interface MenuDao {
     @Query("SELECT * FROM categories ORDER BY sortOrder")
     suspend fun categoriesWithDrinks(): List<CategoryWithDrinks>
 
+    @Transaction
+    @Query("SELECT * FROM categories ORDER BY sortOrder")
+    fun observeCategoriesWithDrinks(): Flow<List<CategoryWithDrinks>>
+
     @Query("SELECT COUNT(*) FROM categories")
     suspend fun categoryCount(): Int
 
@@ -30,6 +34,31 @@ interface MenuDao {
 
     @Insert
     suspend fun insertDrinks(drinks: List<DrinkEntity>)
+
+    @Insert
+    suspend fun insertDrink(drink: DrinkEntity): Long
+
+    @Update
+    suspend fun updateCategory(category: CategoryEntity)
+
+    @Update
+    suspend fun updateDrink(drink: DrinkEntity)
+
+    @Query("SELECT * FROM categories WHERE id = :id")
+    suspend fun categoryById(id: Long): CategoryEntity?
+
+    @Query("SELECT * FROM drinks WHERE id = :id")
+    suspend fun drinkById(id: Long): DrinkEntity?
+
+    @Query("SELECT * FROM drinks WHERE categoryId = :categoryId ORDER BY sortOrder")
+    suspend fun drinksOf(categoryId: Long): List<DrinkEntity>
+
+    @Query("DELETE FROM drinks WHERE id = :id")
+    suspend fun deleteDrinkById(id: Long)
+
+    /** Drinks follow via the CASCADE foreign key. */
+    @Query("DELETE FROM categories")
+    suspend fun deleteAllCategories()
 }
 
 @Dao
@@ -57,6 +86,8 @@ data class RoundWithResults(
     @Embedded val round: RoundEntity,
     @Relation(parentColumn = "id", entityColumn = "roundId")
     val results: List<RollResultEntity>,
+    @Relation(parentColumn = "id", entityColumn = "roundId")
+    val extras: List<ExtraOrderItemEntity>,
 )
 
 @Dao
@@ -88,4 +119,13 @@ interface RoundDao {
     /** Deletes the round; its results follow via the CASCADE foreign key. */
     @Query("DELETE FROM rounds WHERE uuid = :uuid")
     suspend fun deleteRoundByUuid(uuid: String)
+
+    @Insert
+    suspend fun insertExtra(extra: ExtraOrderItemEntity): Long
+
+    @Insert
+    suspend fun insertExtras(extras: List<ExtraOrderItemEntity>)
+
+    @Query("DELETE FROM extra_order_items WHERE id = :id")
+    suspend fun deleteExtraById(id: Long)
 }

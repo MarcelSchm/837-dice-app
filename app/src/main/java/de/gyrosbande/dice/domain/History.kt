@@ -30,14 +30,26 @@ data class HistoryResult(
         get() = categorySize > 0 && drinkRolls.sum() > categorySize
 }
 
+/** A manually added order line (food, beer ...), not part of the dicing. */
+data class ExtraItem(
+    val label: String,
+    val priceCents: Int,
+    val quantity: Int,
+) {
+    val totalCents: Int get() = priceCents * quantity
+}
+
 /** A finished round as shown in the history. */
 data class HistoryRound(
     val uuid: String,
     val startedAt: Long,
     val finishedAt: Long,
     val results: List<HistoryResult>,
+    val extras: List<ExtraItem> = emptyList(),
 ) {
-    val totalCents: Int get() = results.sumOf { it.priceCents }
+    /** Rolled drinks plus manually added extras. */
+    val totalCents: Int
+        get() = results.sumOf { it.priceCents } + extras.sumOf { it.totalCents }
 
     val year: Int
         get() = Calendar.getInstance().apply { timeInMillis = startedAt }.get(Calendar.YEAR)

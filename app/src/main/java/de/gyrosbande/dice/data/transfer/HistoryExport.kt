@@ -42,6 +42,15 @@ data class ExportRound(
     val startedAt: Long,
     val finishedAt: Long,
     val results: List<ExportResult>,
+    val extraItems: List<ExportExtraItem> = emptyList(),
+)
+
+@Serializable
+data class ExportExtraItem(
+    val label: String,
+    val priceCents: Int,
+    val quantity: Int,
+    val createdAt: Long = 0,
 )
 
 @Serializable

@@ -98,3 +98,28 @@ data class RollResultEntity(
     val wasVirtual: Boolean,
     val createdAt: Long,
 )
+
+/**
+ * A manually added order line for a round (food, beer, cola ...) so the
+ * table's total is right - not part of the dicing.
+ */
+@Entity(
+    tableName = "extra_order_items",
+    foreignKeys = [
+        ForeignKey(
+            entity = RoundEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["roundId"],
+            onDelete = ForeignKey.CASCADE,
+        )
+    ],
+    indices = [Index("roundId")],
+)
+data class ExtraOrderItemEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val roundId: Long,
+    val label: String,
+    val priceCents: Int,
+    val quantity: Int,
+    val createdAt: Long,
+)

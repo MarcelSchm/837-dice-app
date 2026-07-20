@@ -2,16 +2,19 @@ package de.gyrosbande.dice.data
 
 import androidx.room.withTransaction
 import de.gyrosbande.dice.data.db.AppDatabase
+import de.gyrosbande.dice.data.db.ExtraOrderItemEntity
 import de.gyrosbande.dice.data.db.PlayerEntity
 import de.gyrosbande.dice.data.db.RollResultEntity
 import de.gyrosbande.dice.data.db.RoundEntity
 import de.gyrosbande.dice.data.db.RoundWithResults
+import de.gyrosbande.dice.data.transfer.ExportExtraItem
 import de.gyrosbande.dice.data.transfer.ExportPlayer
 import de.gyrosbande.dice.data.transfer.ExportResult
 import de.gyrosbande.dice.data.transfer.ExportRound
 import de.gyrosbande.dice.data.transfer.HistoryExport
 import de.gyrosbande.dice.data.transfer.HistoryMerge
 import de.gyrosbande.dice.data.transfer.MergeReport
+import de.gyrosbande.dice.domain.ExtraItem
 import de.gyrosbande.dice.domain.HistoryResult
 import de.gyrosbande.dice.domain.HistoryRound
 import kotlinx.coroutines.flow.Flow
@@ -69,6 +72,17 @@ class HistoryRepository(private val database: AppDatabase) {
                     finishedAt = round.finishedAt,
                 )
             )
+            roundDao.insertExtras(
+                round.extraItems.map { extra ->
+                    ExtraOrderItemEntity(
+                        roundId = roundId,
+                        label = extra.label,
+                        priceCents = extra.priceCents,
+                        quantity = extra.quantity,
+                        createdAt = extra.createdAt,
+                    )
+                }
+            )
             roundDao.insertResults(
                 round.results.map { result ->
                     RollResultEntity(
@@ -111,6 +125,9 @@ class HistoryRepository(private val database: AppDatabase) {
                 wasVirtual = result.wasVirtual,
             )
         },
+        extras = extras.sortedBy { it.createdAt }.map {
+            ExtraItem(label = it.label, priceCents = it.priceCents, quantity = it.quantity)
+        },
     )
 
     private fun RoundWithResults.toExport() = ExportRound(
@@ -130,6 +147,14 @@ class HistoryRepository(private val database: AppDatabase) {
                 substituted = result.substituted,
                 wasVirtual = result.wasVirtual,
                 createdAt = result.createdAt,
+            )
+        },
+        extraItems = extras.sortedBy { it.createdAt }.map {
+            ExportExtraItem(
+                label = it.label,
+                priceCents = it.priceCents,
+                quantity = it.quantity,
+                createdAt = it.createdAt,
             )
         },
     )

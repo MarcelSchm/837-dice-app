@@ -140,6 +140,21 @@ class StatsCalculatorTest {
     }
 
     @Test
+    fun `total includes manually added extras`() {
+        val stats = StatsCalculator.calculate(
+            listOf(
+                round(result("Marcel", priceCents = 250)).copy(
+                    extras = listOf(ExtraItem("Menü 837", 850, 2)),
+                ),
+            )
+        )
+        // 2,50 € drink + 2 x 8,50 € food
+        assertEquals(1950, stats.totalCents)
+        // but the roll count stays drink-based
+        assertEquals(1, stats.rollCount)
+    }
+
+    @Test
     fun `totals add up`() {
         val stats = StatsCalculator.calculate(
             listOf(
