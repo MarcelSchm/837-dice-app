@@ -14,8 +14,8 @@ android {
         applicationId = "de.gyrosbande.dice"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.2"
+        versionCode = 4
+        versionName = "1.3"
     }
 
     // CI signing: when the environment variables (GitHub secrets) are set,
