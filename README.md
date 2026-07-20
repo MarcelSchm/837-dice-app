@@ -86,3 +86,5 @@ The debug APK lands in `app/build/outputs/apk/debug/app-debug.apk`.
 
 - [Game rules, menu & architecture](docs/DETAILS.md)
 - [Signing & release secrets](docs/SIGNING.md)
+- [Pixel Watch companion](docs/WEAR.md)
+- [Roadmap: iPhone, Pixel Watch, Apple Watch](docs/MULTIPLATFORM.md)

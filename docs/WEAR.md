@@ -8,6 +8,10 @@ quick-roll app described below, built on the shared `:core` module and
 attached to every release as `837-dice-wear-vX.Y.apk`. Phases 2 and 3
 are still concepts.
 
+> Part of the wider platform plan - see
+> [MULTIPLATFORM.md](MULTIPLATFORM.md) for how this fits together with
+> the planned iPhone and Apple Watch versions.
+
 **Not synced yet, by design:** phase 1 rolls on the bundled San Remo menu
 and mirrors the phone's "Schnell würfeln", which never counts towards
 history or statistics - so there is nothing to sync and nothing gets
