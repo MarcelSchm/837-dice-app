@@ -23,12 +23,22 @@ Bump `versionName`/`versionCode` in `app/build.gradle.kts`, commit, then
 tag and push:
 
 ```bash
-git tag v1.1
-git push origin v1.1
+git tag v1.3
+git push origin v1.3
 ```
 
-The pipeline builds, tests and attaches the APK to a GitHub release
-automatically. Signing is covered in [docs/SIGNING.md](docs/SIGNING.md).
+The pipeline builds, tests and attaches the APK to a GitHub release.
+Release notes are generated automatically from the
+[Conventional Commit](https://www.conventionalcommits.org) messages with
+[git-cliff](https://git-cliff.org) (config: `cliff.toml`), so users can
+see what changed between versions - see [CHANGELOG.md](CHANGELOG.md) for
+the full history. To refresh the changelog file before tagging:
+
+```bash
+git cliff --tag v1.3 -o CHANGELOG.md
+```
+
+Signing is covered in [docs/SIGNING.md](docs/SIGNING.md).
 
 ## 🛠️ Build locally
 
