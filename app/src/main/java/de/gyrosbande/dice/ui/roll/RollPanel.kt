@@ -45,10 +45,10 @@ fun ColumnScope.RollPanel(
 
     // Phase heading
     val (title, subtitle) = when (phase) {
-        is RollPhase.CategoryRoll -> "Wurf 1: Kategorie" to "Ein Würfel entscheidet, aus welcher Ecke der Karte es brennt."
+        is RollPhase.CategoryRoll -> "Wurf 1: Kategorie" to "Ein Würfel entscheidet, welche Kategorie dran ist."
         is RollPhase.DrinkRoll -> "Wurf 2: ${phase.category.name}" to
-            if (phase.diceCount == 2) "${phase.category.drinks.size} Drinks – zwei Würfel, die Summe zählt!"
-            else "${phase.category.drinks.size} Drinks – ein Würfel reicht."
+            if (phase.diceCount == 2) "${phase.category.drinks.size} Drinks, also zwei Würfel. Die Summe zählt!"
+            else "${phase.category.drinks.size} Drinks, ein Würfel reicht."
         is RollPhase.Finished -> "Das wird bestellt! 🍻" to null
     }
     Text(title, style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)

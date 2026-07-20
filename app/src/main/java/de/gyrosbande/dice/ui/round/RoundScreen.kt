@@ -13,20 +13,18 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import de.gyrosbande.dice.domain.OrderSummary
 import de.gyrosbande.dice.domain.PlayerOutcome
+import de.gyrosbande.dice.ui.OrderCard
 import de.gyrosbande.dice.ui.roll.RollPanel
 
 /**
@@ -60,7 +58,7 @@ fun RoundScreen(viewModel: RoundViewModel, onGoToPlayers: () -> Unit, onDone: ()
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                "Leg zuerst die Gyrosbande an – wer einen Haken hat, spielt mit.",
+                "Leg zuerst die Gyrosbande an. Wer einen Haken hat, spielt mit.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -113,7 +111,7 @@ fun RoundScreen(viewModel: RoundViewModel, onGoToPlayers: () -> Unit, onDone: ()
                         .height(56.dp),
                 ) {
                     Text(
-                        if (isLast) "Zur Bestellung 🧾" else "Weiter – nächster Spieler",
+                        if (isLast) "Zur Bestellung 🧾" else "Nächster Spieler",
                         style = MaterialTheme.typography.titleMedium,
                     )
                 }
@@ -151,43 +149,10 @@ private fun SummaryContent(results: List<PlayerOutcome>, onDone: () -> Unit) {
 
     // Grouped order with total
     val outcomes = results.map { it.outcome }
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
-    ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            OrderSummary.lines(outcomes).forEach { line ->
-                Row {
-                    Text(
-                        "${line.quantity}×",
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.padding(end = 12.dp),
-                    )
-                    Text(
-                        line.drink.name + (line.drink.sizeLabel?.let { " ($it)" } ?: ""),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Text(line.totalFormatted, color = MaterialTheme.colorScheme.onPrimary)
-                }
-            }
-            HorizontalDivider(color = MaterialTheme.colorScheme.onPrimary)
-            Row {
-                Text(
-                    "Gesamt",
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.weight(1f),
-                )
-                Text(
-                    OrderSummary.totalFormatted(outcomes),
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                )
-            }
-        }
-    }
+    OrderCard(
+        lines = OrderSummary.lines(outcomes),
+        totalCents = OrderSummary.totalCents(outcomes),
+    )
     Spacer(Modifier.height(24.dp))
     Button(
         onClick = onDone,

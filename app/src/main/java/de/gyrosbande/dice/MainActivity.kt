@@ -14,6 +14,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.gyrosbande.dice.ui.AppViewModelProvider
 import de.gyrosbande.dice.ui.HomeScreen
+import de.gyrosbande.dice.ui.history.HistoryDetailScreen
+import de.gyrosbande.dice.ui.history.HistoryScreen
 import de.gyrosbande.dice.ui.players.PlayersScreen
 import de.gyrosbande.dice.ui.roll.QuickRollScreen
 import de.gyrosbande.dice.ui.round.RoundScreen
@@ -37,6 +39,21 @@ class MainActivity : ComponentActivity() {
                                 onStartRound = { navController.navigate("round") },
                                 onQuickRoll = { navController.navigate("quickroll") },
                                 onPlayers = { navController.navigate("players") },
+                                onHistory = { navController.navigate("history") },
+                            )
+                        }
+                        composable("history") {
+                            HistoryScreen(
+                                viewModel = viewModel(factory = AppViewModelProvider.Factory),
+                                onOpenRound = { uuid -> navController.navigate("history/$uuid") },
+                                onBack = { navController.popBackStack() },
+                            )
+                        }
+                        composable("history/{uuid}") { backStackEntry ->
+                            HistoryDetailScreen(
+                                viewModel = viewModel(factory = AppViewModelProvider.Factory),
+                                uuid = backStackEntry.arguments?.getString("uuid"),
+                                onBack = { navController.popBackStack() },
                             )
                         }
                         composable("quickroll") {

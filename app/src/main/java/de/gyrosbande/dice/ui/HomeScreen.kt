@@ -3,6 +3,7 @@ package de.gyrosbande.dice.ui
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,6 +27,7 @@ fun HomeScreen(
     onStartRound: () -> Unit,
     onQuickRoll: () -> Unit,
     onPlayers: () -> Unit,
+    onHistory: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -66,17 +68,27 @@ fun HomeScreen(
             Text("Schnell würfeln", style = MaterialTheme.typography.titleMedium)
         }
         Spacer(Modifier.height(12.dp))
-        OutlinedButton(
-            onClick = onPlayers,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-        ) {
-            Text("Spieler", style = MaterialTheme.typography.titleMedium)
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            OutlinedButton(
+                onClick = onPlayers,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp),
+            ) {
+                Text("Spieler", style = MaterialTheme.typography.titleMedium)
+            }
+            OutlinedButton(
+                onClick = onHistory,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp),
+            ) {
+                Text("Historie", style = MaterialTheme.typography.titleMedium)
+            }
         }
         Spacer(Modifier.height(24.dp))
         Text(
-            "Historie & Kartenpflege folgen bald.",
+            "Kartenpflege folgt bald.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
