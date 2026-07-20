@@ -71,6 +71,16 @@ class GameFlow(
     }
 
     /**
+     * Re-roll the drink for an already recorded result - e.g. the waiter
+     * says the drink is out while the order is read out at the end of the
+     * round. Enters the drink-roll phase for [category] directly from any
+     * state; the original category roll stands, matching the house rule.
+     */
+    fun redoDrinkRoll(category: Category, categoryRoll: Int) {
+        phase = RollPhase.DrinkRoll(category, categoryRoll)
+    }
+
+    /**
      * San Remo is out of the rolled drink: replace it by hand (e.g. Grog
      * instead of Glühwein). The original rolls stay recorded, the outcome
      * is marked as substituted.

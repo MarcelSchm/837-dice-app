@@ -251,8 +251,9 @@ private fun ColumnScope.NotAvailableSection(controller: RollController) {
     }
 }
 
+/** Menu picker for a replacement drink; also used by the round summary. */
 @Composable
-private fun SubstitutePickerDialog(
+internal fun SubstitutePickerDialog(
     categories: List<Category>,
     onPick: (Drink) -> Unit,
     onDismiss: () -> Unit,

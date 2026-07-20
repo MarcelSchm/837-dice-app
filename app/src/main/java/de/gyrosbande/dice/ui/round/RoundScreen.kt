@@ -3,6 +3,7 @@ package de.gyrosbande.dice.ui.round
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -34,6 +36,7 @@ import de.gyrosbande.dice.domain.OrderSummary
 import de.gyrosbande.dice.domain.PriceInput
 import de.gyrosbande.dice.ui.OrderCard
 import de.gyrosbande.dice.ui.roll.RollPanel
+import de.gyrosbande.dice.ui.roll.SubstitutePickerDialog
 
 /**
  * The round flow: active players roll one after another; at the end the
@@ -90,7 +93,10 @@ fun RoundScreen(viewModel: RoundViewModel, onGoToPlayers: () -> Unit, onDone: ()
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        if (viewModel.isFinished) {
+        val redoIndex = viewModel.redoIndex
+        if (redoIndex != null) {
+            RedoContent(viewModel, redoIndex)
+        } else if (viewModel.isFinished) {
             SummaryContent(viewModel, onDone)
         } else {
             val player = viewModel.currentPlayer
@@ -128,10 +134,52 @@ fun RoundScreen(viewModel: RoundViewModel, onGoToPlayers: () -> Unit, onDone: ()
     }
 }
 
+/** Re-rolling one player's drink after "they don't have that". */
+@Composable
+private fun ColumnScope.RedoContent(
+    viewModel: RoundViewModel,
+    index: Int,
+) {
+    val controller = viewModel.controller ?: return
+    val result = viewModel.results.getOrNull(index) ?: return
+
+    Text(
+        "🎲 ${result.player.name} würfelt neu",
+        style = MaterialTheme.typography.titleLarge,
+        color = MaterialTheme.colorScheme.primary,
+    )
+    Text(
+        "Die Kategorie bleibt, nur der Drink wird neu gewürfelt.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+    )
+    Spacer(Modifier.height(16.dp))
+    RollPanel(
+        controller = controller,
+        onRollVirtual = viewModel::rollVirtual,
+    ) {
+        Button(
+            onClick = viewModel::confirmRedo,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+        ) {
+            Text("Übernehmen ✅", style = MaterialTheme.typography.titleMedium)
+        }
+    }
+    Spacer(Modifier.height(8.dp))
+    OutlinedButton(onClick = viewModel::cancelRedo, modifier = Modifier.fillMaxWidth()) {
+        Text("Abbrechen")
+    }
+}
+
 @Composable
 private fun SummaryContent(viewModel: RoundViewModel, onDone: () -> Unit) {
     val results = viewModel.results
     var addExtraDialog by remember { mutableStateOf(false) }
+    var fixIndex by remember { mutableStateOf<Int?>(null) }
+    var pickerForIndex by remember { mutableStateOf<Int?>(null) }
 
     Text("Die Bestellung 🧾", style = MaterialTheme.typography.headlineMedium)
     Spacer(Modifier.height(4.dp))
@@ -142,21 +190,32 @@ private fun SummaryContent(viewModel: RoundViewModel, onDone: () -> Unit) {
     )
     Spacer(Modifier.height(16.dp))
 
-    // Who rolled what
+    // Who rolled what - tap a row when San Remo doesn't have the drink
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            results.forEach { result ->
-                Row {
+            results.forEachIndexed { index, result ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { fixIndex = index },
+                ) {
                     Text(result.player.name, modifier = Modifier.weight(1f))
                     Text(
-                        result.outcome.drink.name,
+                        result.outcome.drink.name +
+                            if (result.outcome.substituted) " ✎" else "",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
         }
     }
-    Spacer(Modifier.height(16.dp))
+    Spacer(Modifier.height(4.dp))
+    Text(
+        "Drink gibt's nicht? Zeile antippen.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Spacer(Modifier.height(12.dp))
 
     // Grouped order with total (drinks plus manual extras)
     val outcomes = results.map { it.outcome }
@@ -190,6 +249,60 @@ private fun SummaryContent(viewModel: RoundViewModel, onDone: () -> Unit) {
             onDismiss = { addExtraDialog = false },
         )
     }
+
+    // "They don't have that" - fix a single result from the summary
+    fixIndex?.let { index ->
+        val result = results.getOrNull(index)
+        if (result == null) {
+            fixIndex = null
+        } else {
+            AlertDialog(
+                onDismissRequest = { fixIndex = null },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            fixIndex = null
+                            viewModel.startRedo(index)
+                        },
+                    ) {
+                        Text("Neu würfeln 🎲")
+                    }
+                },
+                dismissButton = {
+                    Row {
+                        TextButton(onClick = { fixIndex = null }) { Text("Passt doch") }
+                        TextButton(
+                            onClick = {
+                                fixIndex = null
+                                pickerForIndex = index
+                            },
+                        ) {
+                            Text("Selbst wählen 📋")
+                        }
+                    }
+                },
+                title = { Text("„${result.outcome.drink.name}“ gibt's nicht?") },
+                text = {
+                    Text(
+                        "${result.player.name} würfelt in derselben Kategorie neu, " +
+                            "oder ihr wählt von Hand einen Ersatz."
+                    )
+                },
+            )
+        }
+    }
+
+    pickerForIndex?.let { index ->
+        SubstitutePickerDialog(
+            categories = viewModel.controller?.categories.orEmpty(),
+            onPick = { drink ->
+                viewModel.substituteResult(index, drink)
+                pickerForIndex = null
+            },
+            onDismiss = { pickerForIndex = null },
+        )
+    }
+
     Button(
         onClick = onDone,
         modifier = Modifier

@@ -80,6 +80,15 @@ class RollController(
         state = state.copy(phase = flow.phase, shownDice = emptyList(), pendingManual = emptyList())
     }
 
+    /**
+     * Re-roll the drink for an already recorded result (order summary says
+     * "they don't have that") - jumps straight into the drink roll.
+     */
+    fun redoDrinkRoll(category: Category, categoryRoll: Int) {
+        flow.redoDrinkRoll(category, categoryRoll)
+        state = state.copy(phase = flow.phase, shownDice = emptyList(), pendingManual = emptyList())
+    }
+
     /** Drink unavailable: replace it by hand from the menu. */
     fun substitute(drink: Drink) {
         if (flow.phase !is RollPhase.Finished) return

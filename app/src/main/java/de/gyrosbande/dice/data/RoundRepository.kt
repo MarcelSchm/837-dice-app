@@ -19,10 +19,13 @@ class RoundRepository(private val roundDao: RoundDao) {
             )
         )
 
-    /** Persists one player's result as a snapshot (see [RollResultEntity]). */
-    suspend fun saveResult(roundId: Long, result: PlayerOutcome, wasVirtual: Boolean) {
+    /**
+     * Persists one player's result as a snapshot (see [RollResultEntity])
+     * and returns the row id, so the result can be corrected later.
+     */
+    suspend fun saveResult(roundId: Long, result: PlayerOutcome, wasVirtual: Boolean): Long {
         val outcome = result.outcome
-        roundDao.insertResult(
+        return roundDao.insertResult(
             RollResultEntity(
                 roundId = roundId,
                 playerId = result.player.id,
@@ -38,6 +41,26 @@ class RoundRepository(private val roundDao: RoundDao) {
                 wasVirtual = wasVirtual,
                 createdAt = System.currentTimeMillis(),
             )
+        )
+    }
+
+    /**
+     * Rewrites a recorded result ("they don't have that" while ordering).
+     * Keeps the row, the player and the original position in the round.
+     */
+    suspend fun updateResult(resultId: Long, result: PlayerOutcome, wasVirtual: Boolean) {
+        val outcome = result.outcome
+        roundDao.updateResult(
+            id = resultId,
+            categoryName = outcome.category.name,
+            drinkName = outcome.drink.name,
+            sizeLabel = outcome.drink.sizeLabel,
+            priceCents = outcome.drink.priceCents,
+            categoryRoll = outcome.categoryRoll,
+            drinkRolls = outcome.drinkRolls.joinToString(","),
+            categorySize = outcome.category.drinks.size,
+            substituted = outcome.substituted,
+            wasVirtual = wasVirtual,
         )
     }
 

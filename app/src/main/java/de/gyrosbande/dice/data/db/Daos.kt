@@ -96,7 +96,30 @@ interface RoundDao {
     suspend fun insertRound(round: RoundEntity): Long
 
     @Insert
-    suspend fun insertResult(result: RollResultEntity)
+    suspend fun insertResult(result: RollResultEntity): Long
+
+    /**
+     * Rewrites a recorded result after "they don't have that" at the
+     * counter. Keeps id, roundId, player and createdAt (result order!).
+     */
+    @Query(
+        "UPDATE roll_results SET categoryName = :categoryName, drinkName = :drinkName, " +
+            "drinkSizeLabel = :sizeLabel, priceCents = :priceCents, categoryRoll = :categoryRoll, " +
+            "drinkRolls = :drinkRolls, categorySize = :categorySize, substituted = :substituted, " +
+            "wasVirtual = :wasVirtual WHERE id = :id"
+    )
+    suspend fun updateResult(
+        id: Long,
+        categoryName: String,
+        drinkName: String,
+        sizeLabel: String?,
+        priceCents: Int,
+        categoryRoll: Int,
+        drinkRolls: String,
+        categorySize: Int,
+        substituted: Boolean,
+        wasVirtual: Boolean,
+    )
 
     @Insert
     suspend fun insertResults(results: List<RollResultEntity>)

@@ -121,6 +121,27 @@ class GameFlowTest {
     }
 
     @Test
+    fun `redoDrinkRoll re-enters the drink roll for a recorded result`() {
+        // "They don't have that" at the counter: the flow was already
+        // reset for the next player, then a past result is redone.
+        val flow = GameFlow()
+        flow.enterManual(listOf(3)) // Bitter
+        flow.enterManual(listOf(2))
+        flow.reset()
+
+        val bitter = MenuSeed.categoryFor(3)
+        flow.redoDrinkRoll(bitter, categoryRoll = 3)
+        val phase = flow.phase as RollPhase.DrinkRoll
+        assertEquals("Bitter", phase.category.name)
+        assertEquals(3, phase.categoryRoll)
+
+        flow.enterManual(listOf(4))
+        val done = flow.phase as RollPhase.Finished
+        assertEquals("Fernet Branca 42 %", done.outcome.drink.name)
+        assertEquals(3, done.outcome.categoryRoll)
+    }
+
+    @Test
     fun `every menu category is reachable and playable`() {
         for (n in 1..6) {
             val flow = GameFlow()
