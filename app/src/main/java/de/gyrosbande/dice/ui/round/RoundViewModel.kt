@@ -1,5 +1,6 @@
 package de.gyrosbande.dice.ui.round
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -8,12 +9,15 @@ import androidx.lifecycle.viewModelScope
 import de.gyrosbande.dice.data.MenuRepository
 import de.gyrosbande.dice.data.PlayerRepository
 import de.gyrosbande.dice.data.RoundRepository
+import de.gyrosbande.dice.data.sync.WatchRoundLink
 import de.gyrosbande.dice.domain.Drink
 import de.gyrosbande.dice.domain.ExtraItem
 import de.gyrosbande.dice.domain.Player
 import de.gyrosbande.dice.domain.PlayerOutcome
 import de.gyrosbande.dice.domain.RollPhase
 import de.gyrosbande.dice.domain.RoundSession
+import de.gyrosbande.dice.domain.sync.RoundStage
+import de.gyrosbande.dice.domain.sync.WatchRoundState
 import de.gyrosbande.dice.ui.roll.RollController
 import de.gyrosbande.dice.ui.roll.RollMode
 import kotlinx.coroutines.launch
@@ -23,10 +27,14 @@ import kotlinx.coroutines.launch
  * and the round ends in the grouped order summary.
  */
 class RoundViewModel(
+    context: Context,
     private val menuRepository: MenuRepository,
     private val playerRepository: PlayerRepository,
     private val roundRepository: RoundRepository,
 ) : ViewModel() {
+
+    /** One-way mirror of the live round to a paired watch (phase 2b, display only). */
+    private val watchLink = WatchRoundLink(context)
 
     var loading by mutableStateOf(true)
         private set
@@ -84,11 +92,22 @@ class RoundViewModel(
                 controller = RollController(menuRepository.categories())
             }
             loading = false
+            publishWatch()
         }
     }
 
+    override fun onCleared() {
+        // Round screen gone: clear the round so the watch reverts to quick-roll.
+        watchLink.close()
+    }
+
     fun rollVirtual() {
-        viewModelScope.launch { controller?.rollVirtual() }
+        viewModelScope.launch {
+            // Show the tumble on the watch, then the result.
+            publishWatch(rolling = true)
+            controller?.rollVirtual()
+            publishWatch()
+        }
     }
 
     /** True when San Remo said they are out of this drink. */
@@ -117,21 +136,64 @@ class RoundViewModel(
 
     /** Save the current player's finished roll and advance to the next one. */
     fun confirmResult() {
+        viewModelScope.launch { confirmFinished() }
+    }
+
+    private suspend fun confirmFinished() {
         val activeController = controller ?: return
         val activeSession = session ?: return
         val finished = activeController.state.phase as? RollPhase.Finished ?: return
         val wasVirtual = activeController.state.mode == RollMode.VIRTUAL
 
-        viewModelScope.launch {
-            val id = roundId ?: roundRepository.startRound().also { roundId = it }
-            activeSession.record(finished.outcome)
-            results = activeSession.results.toList()
-            resultIds += roundRepository.saveResult(id, results.last(), wasVirtual)
-            if (activeSession.isFinished) {
-                roundRepository.finishRound(id)
-            } else {
-                activeController.reset()
-            }
+        val id = roundId ?: roundRepository.startRound().also { roundId = it }
+        activeSession.record(finished.outcome)
+        results = activeSession.results.toList()
+        resultIds += roundRepository.saveResult(id, results.last(), wasVirtual)
+        if (activeSession.isFinished) {
+            roundRepository.finishRound(id)
+        } else {
+            activeController.reset()
+        }
+        publishWatch()
+    }
+
+    // --- Watch as a live second display (phase 2b) ---------------------
+
+    private fun publishWatch(rolling: Boolean = false) {
+        val state = watchState()
+        watchLink.publish(if (rolling) state.copy(rolling = true) else state)
+    }
+
+    /** Maps the current round to the state mirrored to the watch. */
+    private fun watchState(): WatchRoundState {
+        val activeController = controller ?: return WatchRoundState.INACTIVE
+        if (session == null) return WatchRoundState.INACTIVE
+        val index = results.size
+        val total = players.size
+        if (isFinished) {
+            return WatchRoundState(
+                active = true,
+                playerIndex = index,
+                totalPlayers = total,
+                stage = RoundStage.DONE,
+            )
+        }
+        val name = currentPlayer?.name
+        val rolling = activeController.state.isRolling
+        return when (val phase = activeController.state.phase) {
+            is RollPhase.CategoryRoll -> WatchRoundState(
+                active = true, currentPlayer = name, playerIndex = index, totalPlayers = total,
+                stage = RoundStage.CATEGORY, rolling = rolling,
+            )
+            is RollPhase.DrinkRoll -> WatchRoundState(
+                active = true, currentPlayer = name, playerIndex = index, totalPlayers = total,
+                stage = RoundStage.DRINK, rolling = rolling, category = phase.category.name,
+            )
+            is RollPhase.Finished -> WatchRoundState(
+                active = true, currentPlayer = name, playerIndex = index, totalPlayers = total,
+                stage = RoundStage.RESULT, rolling = rolling, category = phase.outcome.category.name,
+                resultDrink = phase.outcome.drink.name, resultPrice = phase.outcome.drink.priceFormatted,
+            )
         }
     }
 

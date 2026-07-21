@@ -23,6 +23,7 @@ object AppViewModelProvider {
         }
         initializer {
             RoundViewModel(
+                context = diceApp(),
                 menuRepository = diceApp().menuRepository,
                 playerRepository = diceApp().playerRepository,
                 roundRepository = diceApp().roundRepository,

@@ -35,6 +35,8 @@ import de.gyrosbande.dice.domain.Category
 import de.gyrosbande.dice.domain.GameFlow
 import de.gyrosbande.dice.domain.MenuSeed
 import de.gyrosbande.dice.domain.RollPhase
+import de.gyrosbande.dice.domain.sync.RoundStage
+import de.gyrosbande.dice.domain.sync.WatchRoundState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.random.Random
@@ -45,33 +47,52 @@ private val Grey = Color(0xFFB5B5B5)
 class MainActivity : ComponentActivity() {
 
     private lateinit var watchMenu: WatchMenu
+    private lateinit var watchRound: WatchRound
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         watchMenu = WatchMenu(this)
-        setContent { WatchApp(watchMenu) }
+        watchRound = WatchRound(this)
+        setContent { WatchApp(watchMenu, watchRound) }
     }
 
     override fun onResume() {
         super.onResume()
         watchMenu.start()
+        watchRound.start()
     }
 
     override fun onPause() {
         super.onPause()
         watchMenu.stop()
+        watchRound.stop()
     }
 }
 
 /**
- * The whole phase-2 watch app on one screen: tap (or shake the wrist)
- * to roll, first the category, then the drink. Uses the shared :core
- * game logic - same rules as the phone. Rolls on the menu the phone
- * synced ([watchMenu]); falls back to the bundled seed when no phone
- * has synced yet, so it still works fully standalone.
+ * Entry point: when the phone is running a connected round the watch turns
+ * into the dice cup for it (phase 2b); otherwise it is the standalone
+ * quick-roll (phase 1) on the phone's synced menu (phase 2a).
  */
 @Composable
-fun WatchApp(watchMenu: WatchMenu) {
+fun WatchApp(watchMenu: WatchMenu, watchRound: WatchRound) {
+    val round by watchRound.state.collectAsState()
+    if (round.active) {
+        ConnectedRoundScreen(round)
+    } else {
+        QuickRollScreen(watchMenu)
+    }
+}
+
+/**
+ * The standalone quick-roll: tap (or shake the wrist) to roll, first the
+ * category, then the drink. Uses the shared :core game logic - same rules
+ * as the phone. Rolls on the menu the phone synced ([watchMenu]); falls
+ * back to the bundled seed when no phone has synced yet, so it still works
+ * fully standalone.
+ */
+@Composable
+private fun QuickRollScreen(watchMenu: WatchMenu) {
     val syncedMenu by watchMenu.categories.collectAsState()
     val categories: List<Category> = syncedMenu ?: MenuSeed.categories
 
@@ -140,6 +161,84 @@ fun WatchApp(watchMenu: WatchMenu) {
                 is RollPhase.Finished -> ResultContent(p)
             }
         }
+    }
+}
+
+/**
+ * The watch as a live second display for a round running on the phone
+ * (phase 2b). Purely passive - it mirrors whose turn it is and the rolled
+ * drink, but never rolls: all rolling happens in the phone app, so the
+ * watch can be jostled without any effect.
+ */
+@Composable
+private fun ConnectedRoundScreen(round: WatchRoundState) {
+    val context = LocalContext.current
+
+    // Buzz when a fresh result comes in.
+    LaunchedEffect(round.stage, round.playerIndex) {
+        if (round.stage == RoundStage.RESULT) {
+            context.getSystemService(Vibrator::class.java)
+                ?.vibrate(VibrationEffect.createOneShot(80, VibrationEffect.DEFAULT_AMPLITUDE))
+        }
+    }
+
+    MaterialTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(18.dp),
+            ) {
+                if (round.stage == RoundStage.DONE) {
+                    Text("Runde fertig 🍻", color = Gold, fontSize = 18.sp, textAlign = TextAlign.Center)
+                    Spacer(Modifier.height(6.dp))
+                    Text("Weiter geht's am Handy", color = Grey, fontSize = 11.sp, textAlign = TextAlign.Center)
+                    return@Column
+                }
+
+                Text(
+                    "Spieler ${round.playerIndex + 1}/${round.totalPlayers}",
+                    color = Grey,
+                    fontSize = 11.sp,
+                )
+                Text(
+                    round.currentPlayer ?: "",
+                    color = Gold,
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(Modifier.height(8.dp))
+
+                when {
+                    round.rolling -> Text("🎲 …", color = Color.White, fontSize = 30.sp)
+                    round.stage == RoundStage.CATEGORY ->
+                        RoundHint("ist dran", "würfelt am Handy")
+                    round.stage == RoundStage.DRINK ->
+                        RoundHint(round.category ?: "", "Drink kommt gleich")
+                    round.stage == RoundStage.RESULT -> ResultLine(round)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RoundHint(top: String, action: String) {
+    Text(top, color = Color.White, fontSize = 14.sp, textAlign = TextAlign.Center)
+    Spacer(Modifier.height(6.dp))
+    Text(action, color = Grey, fontSize = 12.sp, textAlign = TextAlign.Center)
+}
+
+@Composable
+private fun ResultLine(round: WatchRoundState) {
+    Text(round.resultDrink ?: "", color = Gold, fontSize = 18.sp, textAlign = TextAlign.Center)
+    round.resultPrice?.let {
+        Spacer(Modifier.height(2.dp))
+        Text(it, color = Color.White, fontSize = 15.sp)
     }
 }
 
