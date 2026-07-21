@@ -61,6 +61,85 @@ These are Apple's, not ours, and they cannot be engineered away:
 that is a no, the whole iOS branch is pointless and the effort is better
 spent on the Pixel Watch.
 
+## The Apple-hurdle bypass: a PWA on GitHub Pages
+
+Before committing to a native iOS app, seriously consider a **Progressive
+Web App** served from GitHub Pages in this very repo. It sidesteps all
+three constraints above at once: no Mac, no €99/year, no TestFlight
+expiry. Your iPhone friends open a link, "Add to Home Screen" in Safari,
+and it behaves like an app - full-screen, own icon, offline-capable. One
+link works on iPhone, Android, and desktop alike, and a new version is
+just a redeploy (no store review). GitHub Pages hosts it for free.
+
+For a five-person festival group, this may simply be the better iOS
+answer than a native port. But two honest catches decide whether it fits:
+
+### Catch 1 - iOS wipes PWA storage between festivals (the big one)
+
+iOS clears an installed PWA's IndexedDB/local storage when the app hasn't
+been used for a few weeks; there is no persistent-storage guarantee on
+iOS and the site cannot override it. For a *once-a-year* festival app
+this is not an edge case - it is basically certain the local data is gone
+by next summer.
+
+That is survivable **because the app already has JSON export/import** -
+but only if it stops being optional on the web. The web version must
+treat "share your history into the WhatsApp group" as the real save, and
+offer to auto-export at the end of a festival. `navigator.storage.
+persist()` lowers the eviction odds but does not remove them. Net: the
+history feature keeps working, the export just becomes the backbone
+instead of a bonus. Worth an explicit test: export from the Android app,
+import into the PWA, and back - the JSON format is platform-neutral, so
+it should round-trip.
+
+### Catch 2 - the existing Compose UI does *not* carry over to the web
+
+Tempting assumption: "it's all Compose, run Compose Multiplatform for
+Web." It doesn't work well for this target. Compose for Web is Canvas/
+Skia-based and, as of 2026, still Beta - and crucially **Kotlin/Wasm does
+not run in iOS Safari at all**; you'd fall back to the slower Kotlin/JS,
+rendering the whole UI onto a canvas with non-native text fields and
+scrolling. For an app whose entire audience reaches it *through Safari*,
+that is the worst-case combination.
+
+So the web UI is a fresh build either way. Two sane routes:
+
+- **Share `:core` via Kotlin/JS, hand-write a DOM UI.** After the Stage 0
+  KMP work, the 560 lines of tested rules compile to JavaScript; the web
+  app is a thin HTML/CSS layer on top. One language, one source of truth
+  for the rules - consistent with the rest of the project.
+- **A standalone TypeScript PWA.** The rules are small (category roll,
+  drink roll with the wrap rule, grouping, totals) - a few hundred lines
+  of TS, with the existing `:core` unit tests as the exact spec to port
+  against. Fastest to stand up, at the cost of a second implementation of
+  logic that must not drift (it has been stable since v1, so the risk is
+  low).
+
+### Other iOS-PWA rough edges (all minor here)
+
+- **Install is Safari-only.** "Share → Add to Home Screen." Chrome on iOS
+  can't install PWAs. A one-time explain-once step for non-techies.
+- **Shake-to-roll** needs `DeviceMotionEvent.requestPermission()` behind
+  a user tap (iOS 13+). Doable with a "Schütteln aktivieren" button.
+- **Sound** needs a user gesture to start - and rolling *is* a tap, so
+  the roll sound is fine.
+- No push, no background - the app needs neither.
+
+### What it would take
+
+`web/` folder, deployed by an `actions/deploy-pages` job on push/tag (see
+CI below). A web manifest + icons (the Gyrosbande logo is already there),
+a service worker for offline use, IndexedDB for storage, `navigator.
+share()` / a file input for export/import. Effort: **small-to-medium**,
+and every hour spent here also serves Android-browser and desktop users.
+
+**Recommendation:** if the honest answer to "how many of us have
+iPhones?" is "a couple", build the PWA and skip the native iOS port
+entirely - it removes the Mac, the €99, and the TestFlight refresh from
+the picture. Keep the native port on the table only if the iOS feel has
+to be pixel-perfect, which for a dice app at a sticky festival table it
+does not.
+
 ## Stage 0 - make `:core` multiplatform
 
 This is the one investment that pays for *all* later stages, including
@@ -167,7 +246,33 @@ Wearable Data Layer.
 
 **Effort: medium**, and only sensible once stages 0 and 1 stand.
 
-## CI: getting an IPA from the same tag
+## CI: deploying the PWA from the same tag
+
+If the PWA route wins, the CI side is trivial compared to iOS signing -
+no certificates, no macOS runner. A job builds the `web/` output and
+publishes it with the official Pages actions:
+
+```yaml
+  pages:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    # every push to main, or every v* tag - your call
+    steps:
+      - uses: actions/checkout@v4
+      - # build web/ (Kotlin/JS or the TS app)
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: web/dist }
+      - uses: actions/deploy-pages@v4
+```
+
+The app then lives at `https://marcelschm.github.io/837-dice-app/`. Same
+`RELEASE_TAG` scheme can stamp the version into the page footer. One-time
+setup: repo **Settings → Pages → Source: GitHub Actions**.
+
+## CI: getting an IPA from the same tag (native route only)
 
 Today `git tag v2.2` produces two APKs. Adding iOS means a second job in
 `.github/workflows/android.yml` (or a new workflow) on a `macos-latest`
@@ -203,14 +308,23 @@ macOS minutes bill at ten times the Linux rate.)
 
 ## Recommended order
 
-1. **Decide on the €99/year** - everything else depends on it.
-2. **Stage 0 now** (`:core` → KMP). Small, useful even if iOS never
-   happens, and it stops the multiplatform debt from growing with every
-   new feature.
-3. **Clarify the Mac question** (buy / rent / CI-only).
-4. **Stage 1** - the iPhone app via Compose Multiplatform.
-5. **Stage 2** - Pixel Watch phase 2.
-6. **Stage 3** - Apple Watch, when the itch comes.
+The fork is early: **PWA or native for iOS?**
+
+- **If iPhones are few / you want it cheap and soon:** the PWA is the
+  answer. Stage 0 (`:core` → KMP, or even just port the rules to TS) →
+  the PWA on GitHub Pages → done for iOS, and Android/desktop get a web
+  version for free. No Mac, no €99, no TestFlight.
+- **If a native iOS feel is worth the cost:** €99 decision → Stage 0 →
+  Mac question → Stage 1 (Compose Multiplatform).
+
+Either way:
+
+1. **Stage 0 now** (`:core` → multiplatform). Small, useful even if iOS
+   never happens, and it stops the multiplatform debt from growing with
+   every new feature. It underpins both the PWA and the native routes.
+2. **iOS**: the PWA (recommended for this group) *or* the native port.
+3. **Stage 2** - Pixel Watch phase 2.
+4. **Stage 3** - Apple Watch, when the itch comes.
 
 ## Open questions
 
