@@ -67,7 +67,7 @@ fun HomeScreen(
             modifier = Modifier.size(180.dp),
         )
         Spacer(Modifier.height(12.dp))
-        Text("837 Dice", style = MaterialTheme.typography.displaySmall)
+        Text("Würfelspiel", style = MaterialTheme.typography.displaySmall)
         Text(
             "Das Schnapswürfeln der Gyrosbande",
             style = MaterialTheme.typography.bodyLarge,
