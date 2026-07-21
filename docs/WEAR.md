@@ -3,12 +3,14 @@
 Design sketch and status for 837 Dice on Wear OS (Pixel Watch and other
 Wear OS 3+ watches).
 
-**Status: Phase 1 and the whole of phase 2 (menu sync + connected rounds)
-are implemented.** The `:wear` module is the standalone quick-roll app
-described below, built on the shared `:core` module and attached to every
-release as `837-dice-wear-vX.Y.apk`. On top of phase 1, the phone syncs its
-(edited) menu to the watch (2a) and mirrors a live round to the watch as a
-passive second display (2b). Phase 3 (complications/tiles) is still a concept.
+**Status: Phase 1, all of phase 2 (menu sync + connected rounds), and the
+first phase-3 piece (the Open Flair countdown complication) are
+implemented.** The `:wear` module is the standalone quick-roll app described
+below, built on the shared `:core` module and attached to every release as
+`837-dice-wear-vX.Y.apk`. On top of phase 1, the phone syncs its (edited)
+menu to the watch (2a), mirrors a live round to the watch as a passive
+second display (2b), and syncs the festival date for a watch-face countdown
+complication (3). The remaining phase-3 ideas (tile, trophy) are concepts.
 
 > Part of the wider platform plan - see
 > [MULTIPLATFORM.md](MULTIPLATFORM.md) for how this fits together with
@@ -102,11 +104,15 @@ published from it); if the phone process is killed mid-round a stale
 
 ## Phase 3 - nice-to-haves
 
-## Phase 3 - nice-to-haves
-
-- Watch face complication showing the days until the next Open Flair.
-- "Wer ist dran?"-Tile during a round.
-- The hall-of-fame Prosecco king as a tiny trophy screen.
+- **Open Flair countdown complication (implemented).** A watch-face
+  complication counts down to the next festival, reusing the shared
+  `FestivalCountdown`: "10T" before, "Tag 2" during, "🎪" after. The phone
+  mirrors the date to the Data Layer (`FestivalSyncPublisher` → path
+  `/festival`); on the watch a `WearableListenerService` stores it and pokes
+  the complication, and `FestivalComplicationService` renders it. Add it to a
+  watch face via the face's complication picker ("Open Flair").
+- "Wer ist dran?"-Tile during a round (still a concept).
+- The hall-of-fame Prosecco king as a tiny trophy screen (still a concept).
 
 ## Suggested module layout
 
