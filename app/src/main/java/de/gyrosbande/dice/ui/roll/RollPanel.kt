@@ -25,6 +25,7 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,7 +37,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import de.gyrosbande.dice.domain.Category
 import de.gyrosbande.dice.domain.Drink
+import de.gyrosbande.dice.domain.RollOutcome
 import de.gyrosbande.dice.domain.RollPhase
+import de.gyrosbande.dice.domain.StatsCalculator
 import de.gyrosbande.dice.ui.DiceFace
 
 /**
@@ -64,6 +67,24 @@ fun ColumnScope.RollPanel(
         enabled = state.mode == RollMode.VIRTUAL && !state.isRolling && phase !is RollPhase.Finished,
         onShake = rollWithFeedback,
     )
+
+    // Prosecco party: a one-off celebration when a genuine roll lands the
+    // dreaded bottle (not a hand-picked substitute).
+    val finishedOutcome = (phase as? RollPhase.Finished)?.outcome
+    var celebrated by remember { mutableStateOf<RollOutcome?>(null) }
+    var showParty by remember { mutableStateOf(false) }
+    LaunchedEffect(finishedOutcome) {
+        val outcome = finishedOutcome
+        if (outcome != null && !outcome.substituted &&
+            outcome.drink.name == StatsCalculator.PROSECCO_BOTTLE && celebrated !== outcome
+        ) {
+            celebrated = outcome
+            showParty = true
+        }
+    }
+    if (showParty) {
+        ProseccoCelebration(onDismiss = { showParty = false })
+    }
 
     // Phase heading
     val (title, subtitle) = when (phase) {
