@@ -1,5 +1,7 @@
 package de.gyrosbande.dice.ui.roll
 
+import android.content.Context
+import android.media.MediaPlayer
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.compose.animation.core.Animatable
@@ -96,13 +98,22 @@ fun ProseccoCelebration(onDismiss: () -> Unit) {
             onDismiss()
         }
 
-        // A satisfying thump right as the cork pops (never let it crash the party).
+        // Cork pop: a thump plus a burst of applause (both guarded, and the
+        // applause honours the same mute toggle as the dice sound).
         LaunchedEffect(Unit) {
             delay((DURATION_MS * POP_AT).toLong())
             runCatching {
                 @Suppress("DEPRECATION")
                 context.getSystemService(Vibrator::class.java)
                     ?.vibrate(VibrationEffect.createOneShot(70, VibrationEffect.DEFAULT_AMPLITUDE))
+            }
+            val soundOn = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+                .getBoolean("soundEnabled", true)
+            if (soundOn) runCatching {
+                MediaPlayer.create(context, de.gyrosbande.dice.R.raw.prosecco_cheer)?.apply {
+                    setOnCompletionListener { it.release() }
+                    start()
+                }
             }
         }
 
