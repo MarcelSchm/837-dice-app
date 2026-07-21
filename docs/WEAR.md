@@ -3,13 +3,12 @@
 Design sketch and status for 837 Dice on Wear OS (Pixel Watch and other
 Wear OS 3+ watches).
 
-**Status: Phase 1 and phase 2a (menu sync) are implemented.** The `:wear`
-module is the standalone quick-roll app described below, built on the
-shared `:core` module and attached to every release as
-`837-dice-wear-vX.Y.apk`. On top of phase 1, the phone now syncs its
-(edited) menu to the watch over the Wearable Data Layer. The remaining
-phase 2 piece - connected rounds (the watch as dice cup for a live phone
-round) - and phase 3 are still concepts.
+**Status: Phase 1 and the whole of phase 2 (menu sync + connected rounds)
+are implemented.** The `:wear` module is the standalone quick-roll app
+described below, built on the shared `:core` module and attached to every
+release as `837-dice-wear-vX.Y.apk`. On top of phase 1, the phone syncs its
+(edited) menu to the watch (2a) and mirrors a live round to the watch as a
+passive second display (2b). Phase 3 (complications/tiles) is still a concept.
 
 > Part of the wider platform plan - see
 > [MULTIPLATFORM.md](MULTIPLATFORM.md) for how this fits together with
@@ -79,22 +78,29 @@ devices always roll on the same card:
 - The wire format lives in `:core` (`MenuSync`, kotlinx-serialization) with
   round-trip unit tests, ready to be reused by the future PWA.
 
-## Phase 2b - connected rounds (the fun one, still a concept)
+## Phase 2b - connected rounds (implemented, watch is display-only)
 
-The watch becomes the dice cup for a real round running on the phone:
+The watch is a live second display for a round running on the phone - it
+shows what's happening but never drives it, so passing the phone around and
+jostling the watch can't trigger an accidental roll. All rolling stays in
+the phone app.
 
-- Phone starts the round as usual and stays the source of truth
-  (database, players, order summary).
-- The watch shows "Marcel ist dran" and lets the current player roll on
-  the wrist; the result travels to the phone, which records it exactly
-  like a local roll and advances to the next player.
-- Transport: Wearable Data Layer API (`MessageClient` for roll events,
-  `DataClient` for the current round state, building on the 2a plumbing).
-  Both devices must be paired; the phone app keeps working standalone when
-  no watch is around.
+- The phone starts the round as usual and stays the source of truth
+  (database, players, order summary). While the round screen is open it
+  mirrors the live state (one-way) to the watch at Data Layer path `/round`
+  (`WatchRoundLink`, driven from `RoundViewModel`).
+- The watch shows "Marcel ist dran", the tumble while the phone rolls, and
+  the rolled drink and price on the wrist - plus a short buzz when a result
+  lands. No taps, no shake: it is purely passive.
+- The state type lives in `:core` (`RoundSync`, `WatchRoundState`) with unit
+  tests. When the round screen closes the link publishes "inactive" and the
+  watch falls back to standalone quick-roll.
 
-Effort: medium - the protocol is simple (two message types), but pairing
-states, reconnects and "phone app not running" cases need care.
+Known limits (v1): needs the round screen open on the phone (the state is
+published from it); if the phone process is killed mid-round a stale
+"active" state is only cleared when a round screen is next opened.
+
+## Phase 3 - nice-to-haves
 
 ## Phase 3 - nice-to-haves
 

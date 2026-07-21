@@ -161,13 +161,13 @@ and can change (prices/lineup) - the source photos live in `images/`.
 - Shake-to-roll: shaking the phone rolls the virtual dice (like a dice
   cup), with a dice-rattle sound effect that can be muted.
 - Wear OS companion app for the Pixel Watch: standalone quick-roll on the
-  wrist, and the phone's edited menu syncs to the watch over the Wearable
-  Data Layer so both roll on the same card - see [WEAR.md](WEAR.md).
+  wrist, the phone's edited menu syncs to the watch, and a live phone round
+  is mirrored to the watch as a passive second display (whose turn, the
+  rolled drink) - see [WEAR.md](WEAR.md).
 
 ### Planned
 
-- Connected watch rounds (the watch as dice cup for a live phone round) -
-  phase 2b in [WEAR.md](WEAR.md).
+- Watch complications and tiles (phase 3) - see [WEAR.md](WEAR.md).
 
 ## Architecture
 
