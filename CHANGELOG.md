@@ -3,6 +3,15 @@
 All notable changes to 837 Dice. Generated from
 [Conventional Commits](https://www.conventionalcommits.org) with
 [git-cliff](https://git-cliff.org).
+## [2.2] - 2026-07-20
+
+### 🎲 New
+- Use the group's own dice sound and sync the roll animation
+- Report unavailable drinks per drink, not per player
+- Capitalize player names and reject duplicates
+
+### 📚 Documentation
+- Describe the new drink-level flow and name rules
 ## [2.1] - 2026-07-20
 
 ### 🎲 New
