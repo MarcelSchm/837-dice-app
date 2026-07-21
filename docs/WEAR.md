@@ -3,20 +3,31 @@
 Design sketch and status for 837 Dice on Wear OS (Pixel Watch and other
 Wear OS 3+ watches).
 
-**Status: Phase 1 is implemented** - the `:wear` module is the standalone
-quick-roll app described below, built on the shared `:core` module and
-attached to every release as `837-dice-wear-vX.Y.apk`. Phases 2 and 3
-are still concepts.
+**Status: Phase 1 and phase 2a (menu sync) are implemented.** The `:wear`
+module is the standalone quick-roll app described below, built on the
+shared `:core` module and attached to every release as
+`837-dice-wear-vX.Y.apk`. On top of phase 1, the phone now syncs its
+(edited) menu to the watch over the Wearable Data Layer. The remaining
+phase 2 piece - connected rounds (the watch as dice cup for a live phone
+round) - and phase 3 are still concepts.
 
 > Part of the wider platform plan - see
 > [MULTIPLATFORM.md](MULTIPLATFORM.md) for how this fits together with
 > the planned iPhone and Apple Watch versions.
 
-**Not synced yet, by design:** phase 1 rolls on the bundled San Remo menu
-and mirrors the phone's "Schnell würfeln", which never counts towards
-history or statistics - so there is nothing to sync and nothing gets
-lost. Menu edits made on the phone do NOT reach the watch until phase 2
-(Data Layer sync), and watch rolls cannot join a phone round yet.
+**What syncs (phase 2a):** whenever the menu changes on the phone, it is
+serialized (`MenuSync` in `:core`) and written to the Data Layer at path
+`/menu`; the watch listens and rolls on that card instead of its bundled
+seed. The watch stays fully standalone - with no paired phone (or before
+the first sync) it falls back to the seed, and the start screen shows
+whether it is on the phone's card ("🔗 Karte vom Handy") or the default.
+The phone stays the source of truth; sync is one-way and best-effort, so a
+missing watch or Play Services never affects the phone app.
+
+**Still not synced, by design:** the watch mirrors the phone's "Schnell
+würfeln", which never counts towards history or statistics - so watch
+rolls still do not join a phone round or reach history. That is phase 2b
+below.
 
 ## Verdict: very doable
 
@@ -53,7 +64,22 @@ Effort: small. New Gradle module `:wear` plus extracting the domain
 package into a shared `:core` module that both `:app` and `:wear` depend
 on (a mechanical refactor - the code already has no Android imports).
 
-## Phase 2 - connected rounds (the fun one)
+## Phase 2a - menu sync (implemented)
+
+The current menu (with edits) syncs to the watch via `DataClient`, so both
+devices always roll on the same card:
+
+- The phone writes the menu to the Data Layer at path `/menu` whenever it
+  changes (`MenuSyncPublisher`, driven from `DiceApp`'s application scope).
+  Identical menus produce an identical data item, which the Data Layer
+  drops, so this does not spam updates.
+- The watch listens (`WatchMenu`) and rebuilds its `GameFlow` on the synced
+  card, but only while idle at the start screen so a phone edit never
+  rewrites the card mid-round. No paired phone → bundled seed.
+- The wire format lives in `:core` (`MenuSync`, kotlinx-serialization) with
+  round-trip unit tests, ready to be reused by the future PWA.
+
+## Phase 2b - connected rounds (the fun one, still a concept)
 
 The watch becomes the dice cup for a real round running on the phone:
 
@@ -63,11 +89,9 @@ The watch becomes the dice cup for a real round running on the phone:
   the wrist; the result travels to the phone, which records it exactly
   like a local roll and advances to the next player.
 - Transport: Wearable Data Layer API (`MessageClient` for roll events,
-  `DataClient` for the current round state). Both devices must be
-  paired; the phone app keeps working standalone when no watch is
-  around.
-- The current menu (with edits) syncs to the watch via `DataClient`, so
-  both devices always roll on the same card.
+  `DataClient` for the current round state, building on the 2a plumbing).
+  Both devices must be paired; the phone app keeps working standalone when
+  no watch is around.
 
 Effort: medium - the protocol is simple (two message types), but pairing
 states, reconnects and "phone app not running" cases need care.
