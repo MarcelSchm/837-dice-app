@@ -263,11 +263,12 @@ suggestion, adjustable in the app - see open questions):
   `RollController.ROLL_ANIMATION_MS`.
 - ⏳ Open: Wear OS phase 2 - Data Layer sync (menu + watch rolls joining
   phone rounds), see docs/WEAR.md.
-- ⏳ Planned: iPhone port via Kotlin Multiplatform + Compose
-  Multiplatform, later an Apple Watch app - roadmap, blockers and CI
-  changes in docs/MULTIPLATFORM.md. Keep `:core` free of JVM-only APIs
-  (`String.format`, `java.util.*`) so that port stays cheap; the two
-  remaining offenders are listed there.
+- ⏳ Planned iOS: **decided on a PWA served from GitHub Pages**, not a
+  native port (avoids Mac/€99/TestFlight); roadmap, the iOS-storage
+  caveat and the deploy-pages CI job are in docs/MULTIPLATFORM.md. Still
+  keep `:core` free of JVM-only APIs (`String.format`, `java.util.*`) so
+  sharing the rules to Kotlin/JS stays cheap; the two remaining offenders
+  are listed there.
 - Decisions: quick rolls ("Schnell würfeln") deliberately do NOT count
   towards history/statistics - only finished rounds do. Players are
   matched across devices by trimmed, case-insensitive name. The db is at

@@ -3,15 +3,25 @@
 Plan for taking 837 Dice beyond Android. Nothing here is implemented yet -
 this is the route, the cost, and the decisions that need making first.
 
-Target order, as agreed: **iPhone first**, then the Pixel Watch companion
-(details in [WEAR.md](WEAR.md)), then Apple Watch some day.
+## Decision (2026-07): iOS = PWA, not a native port
+
+**Chosen route for iPhone: the Progressive Web App on GitHub Pages**
+(see "The Apple-hurdle bypass" below), *not* a native iOS app. It avoids
+the Mac, the €99/year and TestFlight entirely, and one link also covers
+Android browsers and desktop. The native-iOS section is kept for
+reference only, in case the group ever outgrows the PWA.
+
+The one thing to respect for the PWA: **iOS evicts an installed PWA's
+storage after a few weeks unused**, which for a once-a-year festival app
+means the JSON export/import is the real backup, not a bonus - build the
+web version around that.
 
 ## Verdict
 
 Very doable, and cheaper than it looks - because the game logic was kept
-free of Android from day one. The real obstacles are not code, they are
-Apple's rules: you need a Mac to build, and €99/year to get the app onto
-your friends' phones.
+free of Android from day one. With the PWA route the Apple rules
+(Mac + €99 + TestFlight) fall away entirely; they only apply to the
+native path documented further down.
 
 ## What we already have going for us
 
