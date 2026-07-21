@@ -6,6 +6,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import de.gyrosbande.dice.DiceApp
 import de.gyrosbande.dice.ui.history.HistoryViewModel
+import de.gyrosbande.dice.ui.home.HomeViewModel
 import de.gyrosbande.dice.ui.menu.MenuViewModel
 import de.gyrosbande.dice.ui.players.PlayersViewModel
 import de.gyrosbande.dice.ui.roll.QuickRollViewModel
@@ -32,6 +33,9 @@ object AppViewModelProvider {
         }
         initializer {
             HistoryViewModel(diceApp())
+        }
+        initializer {
+            HomeViewModel(diceApp().settingsRepository)
         }
     }
 }

@@ -5,6 +5,7 @@ import de.gyrosbande.dice.data.HistoryRepository
 import de.gyrosbande.dice.data.MenuRepository
 import de.gyrosbande.dice.data.PlayerRepository
 import de.gyrosbande.dice.data.RoundRepository
+import de.gyrosbande.dice.data.SettingsRepository
 import de.gyrosbande.dice.data.db.AppDatabase
 
 /**
@@ -18,4 +19,5 @@ class DiceApp : Application() {
     val playerRepository: PlayerRepository by lazy { PlayerRepository(database.playerDao()) }
     val roundRepository: RoundRepository by lazy { RoundRepository(database.roundDao()) }
     val historyRepository: HistoryRepository by lazy { HistoryRepository(database) }
+    val settingsRepository: SettingsRepository by lazy { SettingsRepository(this) }
 }

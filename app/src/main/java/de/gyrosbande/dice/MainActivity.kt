@@ -38,6 +38,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         composable("home") {
                             HomeScreen(
+                                viewModel = viewModel(factory = AppViewModelProvider.Factory),
                                 onStartRound = { navController.navigate("round") },
                                 onQuickRoll = { navController.navigate("quickroll") },
                                 onPlayers = { navController.navigate("players") },
