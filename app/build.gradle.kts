@@ -98,6 +98,7 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.play.services.wearable)
     ksp(libs.androidx.room.compiler)
     testImplementation(libs.junit)
     debugImplementation(libs.androidx.ui.tooling)

@@ -3,6 +3,7 @@
 // app (:wear), and fully unit-testable on the JVM.
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 java {
@@ -17,5 +18,9 @@ kotlin {
 }
 
 dependencies {
+    // Multiplatform-friendly (also Kotlin/JS) so the wire format the watch
+    // syncs on can be reused by the future PWA.
+    implementation(libs.kotlinx.serialization.json)
+
     testImplementation(libs.junit)
 }

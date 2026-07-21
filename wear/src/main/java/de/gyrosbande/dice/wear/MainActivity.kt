@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,7 +31,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
+import de.gyrosbande.dice.domain.Category
 import de.gyrosbande.dice.domain.GameFlow
+import de.gyrosbande.dice.domain.MenuSeed
 import de.gyrosbande.dice.domain.RollPhase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -39,20 +43,39 @@ private val Gold = Color(0xFFD4AF37)
 private val Grey = Color(0xFFB5B5B5)
 
 class MainActivity : ComponentActivity() {
+
+    private lateinit var watchMenu: WatchMenu
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { WatchApp() }
+        watchMenu = WatchMenu(this)
+        setContent { WatchApp(watchMenu) }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        watchMenu.start()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        watchMenu.stop()
     }
 }
 
 /**
- * The whole phase-1 watch app on one screen: tap (or shake the wrist)
+ * The whole phase-2 watch app on one screen: tap (or shake the wrist)
  * to roll, first the category, then the drink. Uses the shared :core
- * game logic - same rules as the phone, standalone (no phone needed).
+ * game logic - same rules as the phone. Rolls on the menu the phone
+ * synced ([watchMenu]); falls back to the bundled seed when no phone
+ * has synced yet, so it still works fully standalone.
  */
 @Composable
-fun WatchApp() {
-    val flow = remember { GameFlow() }
+fun WatchApp(watchMenu: WatchMenu) {
+    val syncedMenu by watchMenu.categories.collectAsState()
+    val categories: List<Category> = syncedMenu ?: MenuSeed.categories
+
+    var flow by remember { mutableStateOf(GameFlow(categories)) }
     var phase by remember { mutableStateOf(flow.phase) }
     var shownDice by remember { mutableStateOf(emptyList<Int>()) }
     var rolling by remember { mutableStateOf(false) }
@@ -64,10 +87,20 @@ fun WatchApp() {
             ?.vibrate(VibrationEffect.createOneShot(milliseconds, VibrationEffect.DEFAULT_AMPLITUDE))
     }
 
+    // Adopt a freshly synced menu, but only while sitting idle at the start
+    // so a phone edit never rewrites the card mid-round.
+    LaunchedEffect(categories) {
+        if (flow.phase is RollPhase.CategoryRoll && !rolling) {
+            flow = GameFlow(categories)
+            phase = flow.phase
+        }
+    }
+
     fun rollOrRestart() {
         if (rolling) return
         if (flow.phase is RollPhase.Finished) {
-            flow.reset()
+            // Start the next round on the latest synced menu.
+            flow = GameFlow(categories)
             phase = flow.phase
             shownDice = emptyList()
             return
@@ -102,7 +135,7 @@ fun WatchApp() {
             contentAlignment = Alignment.Center,
         ) {
             when (val p = phase) {
-                is RollPhase.CategoryRoll -> StartContent(shownDice, rolling)
+                is RollPhase.CategoryRoll -> StartContent(shownDice, rolling, synced = syncedMenu != null)
                 is RollPhase.DrinkRoll -> CategoryContent(p, shownDice, rolling)
                 is RollPhase.Finished -> ResultContent(p)
             }
@@ -121,7 +154,7 @@ private fun DiceLine(dice: List<Int>, placeholderCount: Int) {
 }
 
 @Composable
-private fun StartContent(dice: List<Int>, rolling: Boolean) {
+private fun StartContent(dice: List<Int>, rolling: Boolean, synced: Boolean) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(16.dp)) {
         Text("837 Dice", color = Gold, fontSize = 18.sp)
         Spacer(Modifier.height(6.dp))
@@ -133,6 +166,13 @@ private fun StartContent(dice: List<Int>, rolling: Boolean) {
             "Tippen oder Handgelenk schütteln",
             color = Grey,
             fontSize = 11.sp,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            if (synced) "🔗 Karte vom Handy" else "Standardkarte",
+            color = Grey,
+            fontSize = 10.sp,
             textAlign = TextAlign.Center,
         )
     }
