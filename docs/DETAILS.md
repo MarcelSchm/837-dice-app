@@ -119,7 +119,16 @@ and can change (prices/lineup) - the source photos live in `images/`.
   rounds enter history and statistics.
 - Hall of fame fun facts: Prosecco king, top spender, the group's
   most-rolled drink, category magnet, doubles champion, wrap victim, plus
-  the overall tally.
+  the overall tally. "Als Bild teilen" renders the same standings into a
+  black/gold PNG (logo, fun facts, tally) via plain Canvas/Paint and hands
+  it to the share sheet, ready for the WhatsApp group. The wording lives in
+  StatsPresentation (:core) so the on-screen cards and the image always
+  read identically.
+- Festival countdown: tap "Open Flair eintragen" on the home screen to pick
+  the festival start date; the banner then counts down the days, flips to a
+  gold "day X of Y" card while the festival runs, and steps aside once it is
+  over. The date logic (FestivalCountdown) lives in :core for the future
+  PWA; the date itself is stored in SettingsRepository.
 - Export/import: share the history as a JSON file (e.g. into the WhatsApp
   group) or save it locally, and merge files from other phones. The merge
   is idempotent - rounds are deduplicated by uuid, players matched by

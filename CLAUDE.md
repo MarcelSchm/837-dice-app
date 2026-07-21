@@ -151,9 +151,9 @@ suggestion, adjustable in the app - see open questions):
 4. **History & statistics:** all rounds are stored (date, players, results).
    Insights: who had to drink the Prosecco bottle most often? Who spent the
    most? Per-festival-year leaderboard, "hall of fame".
-5. Nice-to-have ideas (only if in the mood): toasts/special rules on
-   doubles, a "festival mode" with countdown to the next Open Flair,
-   exporting statistics as an image to share in the WhatsApp group.
+5. Nice-to-have ideas: the "festival mode" countdown to the next Open Flair
+   and exporting the hall of fame as an image for the WhatsApp group are both
+   done. Still open (only if in the mood): toasts/special rules on doubles.
 
 ## Tech
 
