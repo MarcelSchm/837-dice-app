@@ -3,6 +3,17 @@
 All notable changes to 837 Dice. Generated from
 [Conventional Commits](https://www.conventionalcommits.org) with
 [git-cliff](https://git-cliff.org).
+## [2.3] - 2026-07-21
+
+### 🎲 New
+- Count down to the next Open Flair on the home screen
+- Share the hall of fame as an image
+
+### 📚 Documentation
+- Add the iPhone and Apple Watch roadmap
+- Add the GitHub Pages PWA as the Apple-hurdle bypass
+- Record the decision to go PWA for iOS
+- Describe the festival countdown and hall-of-fame image
 ## [2.2] - 2026-07-20
 
 ### 🎲 New
