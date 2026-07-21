@@ -7,6 +7,7 @@ import de.gyrosbande.dice.data.PlayerRepository
 import de.gyrosbande.dice.data.RoundRepository
 import de.gyrosbande.dice.data.SettingsRepository
 import de.gyrosbande.dice.data.db.AppDatabase
+import de.gyrosbande.dice.data.sync.FestivalSyncPublisher
 import de.gyrosbande.dice.data.sync.MenuSyncPublisher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,10 +30,13 @@ class DiceApp : Application() {
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     private val menuSyncPublisher by lazy { MenuSyncPublisher(this, menuRepository) }
+    private val festivalSyncPublisher by lazy { FestivalSyncPublisher(this, settingsRepository) }
 
     override fun onCreate() {
         super.onCreate()
-        // Mirror the menu to any paired watch (best-effort, see WEAR.md).
+        // Mirror the menu and festival date to any paired watch (best-effort,
+        // see WEAR.md).
         menuSyncPublisher.start(appScope)
+        festivalSyncPublisher.start(appScope)
     }
 }
