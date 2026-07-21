@@ -3,6 +3,16 @@
 All notable changes to 837 Dice. Generated from
 [Conventional Commits](https://www.conventionalcommits.org) with
 [git-cliff](https://git-cliff.org).
+## [2.5] - 2026-07-21
+
+### 🎲 New
+- Mirror a live round to the watch as a second display (phase 2b)
+
+### 📚 Documentation
+- Record the watch round mirror (phase 2b, display-only)
+
+### Other
+- Merge branch 'main' of https://github.com/MarcelSchm/837-dice-app
 ## [2.4] - 2026-07-21
 
 ### 🎲 New
