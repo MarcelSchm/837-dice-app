@@ -3,6 +3,17 @@
 All notable changes to 837 Dice. Generated from
 [Conventional Commits](https://www.conventionalcommits.org) with
 [git-cliff](https://git-cliff.org).
+## [2.4] - 2026-07-21
+
+### 🎲 New
+- Rename the home title to "Würfelspiel"
+- Sync the phone's menu to the watch (Data Layer, phase 2a)
+
+### 📚 Documentation
+- Record watch menu sync (phase 2a) and split out phase 2b
+
+### Other
+- Merge branch 'main' of https://github.com/MarcelSchm/837-dice-app
 ## [2.3] - 2026-07-21
 
 ### 🎲 New
