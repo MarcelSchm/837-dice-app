@@ -14,73 +14,31 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import de.gyrosbande.dice.domain.OrderSummary
 import de.gyrosbande.dice.domain.Stats
+import de.gyrosbande.dice.domain.StatsPresentation
 
 /** The hall of fame: one card per fun fact (hidden while there is no data). */
 @Composable
 fun StatsContent(stats: Stats) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        stats.proseccoKing?.let {
+        StatsPresentation.funFacts(stats).forEach { fact ->
             FunFactCard(
-                emoji = "🍾",
-                title = "Prosecco-König:in",
-                holder = it.names.joinToString(" & "),
-                detail = "${it.count}× die Flasche Prosecco erwischt",
-            )
-        }
-        stats.topSpender?.let {
-            FunFactCard(
-                emoji = "💸",
-                title = "Spendierhosen",
-                holder = it.names.joinToString(" & "),
-                detail = "insgesamt ${OrderSummary.formatCents(it.cents)} verwürfelt",
-            )
-        }
-        stats.favoriteDrink?.let {
-            FunFactCard(
-                emoji = "🥃",
-                title = "Stammgetränk der Bande",
-                holder = it.drinkName + (it.sizeLabel?.let { size -> " ($size)" } ?: ""),
-                detail = "${it.count}× gewürfelt",
-            )
-        }
-        stats.categoryMagnet?.let {
-            FunFactCard(
-                emoji = "🎯",
-                title = "Kategorien-Magnet",
-                holder = it.names.joinToString(" & "),
-                detail = "${it.count}× in ${it.categoryName} gelandet",
-            )
-        }
-        stats.doublesChamp?.let {
-            FunFactCard(
-                emoji = "🎲",
-                title = "Pasch-Profi",
-                holder = it.names.joinToString(" & "),
-                detail = if (it.count == 1) "1 Pasch beim Drink-Wurf" else "${it.count} Päsche beim Drink-Wurf",
-            )
-        }
-        stats.wrapVictim?.let {
-            FunFactCard(
-                emoji = "🔄",
-                title = "Wrap-Opfer",
-                holder = it.names.joinToString(" & "),
-                detail = "${it.count}× unten durch und oben wieder reingerutscht",
+                emoji = fact.emoji,
+                title = fact.title,
+                holder = fact.holder,
+                detail = fact.detail,
             )
         }
 
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text("📊 Bilanz", style = MaterialTheme.typography.titleMedium)
-                val roundsLabel = if (stats.roundCount == 1) "Runde" else "Runden"
-                val rollsLabel = if (stats.rollCount == 1) "Wurf" else "Würfe"
                 Text(
-                    "${stats.roundCount} $roundsLabel, ${stats.rollCount} $rollsLabel",
+                    StatsPresentation.tally(stats),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    "Ihr habt dem San Remo schon ${stats.totalFormatted} beschert 🇬🇷",
+                    StatsPresentation.revenueLine(stats),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }

@@ -8,10 +8,12 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.graphics.Bitmap
 import de.gyrosbande.dice.DiceApp
 import de.gyrosbande.dice.data.transfer.HistoryExport
 import de.gyrosbande.dice.data.transfer.MergeReport
 import de.gyrosbande.dice.domain.HistoryRound
+import de.gyrosbande.dice.domain.StatsCalculator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -45,6 +47,29 @@ class HistoryViewModel(private val app: DiceApp) : ViewModel() {
     fun exportFileName(): String {
         val stamp = SimpleDateFormat("yyyy-MM-dd", Locale.GERMANY).format(Date())
         return "837-dice-historie-$stamp.json"
+    }
+
+    /**
+     * Renders the hall of fame for [rounds] as a PNG and hands a shareable
+     * Uri to [onReady]. [subtitle] names the period (year or "gesamt").
+     */
+    fun shareStatsImage(rounds: List<HistoryRound>, subtitle: String, onReady: (Uri) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val uri = withContext(Dispatchers.IO) {
+                    val stats = StatsCalculator.calculate(rounds)
+                    val bitmap = StatsImage.render(app, stats, subtitle)
+                    val dir = File(app.cacheDir, "exports").apply { mkdirs() }
+                    val file = File(dir, "837-dice-hall-of-fame.png")
+                    file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+                    bitmap.recycle()
+                    FileProvider.getUriForFile(app, "${app.packageName}.fileprovider", file)
+                }
+                onReady(uri)
+            } catch (e: Exception) {
+                errorMessage = "Bild teilen fehlgeschlagen: ${e.message}"
+            }
+        }
     }
 
     /** Writes the export into the cache dir and hands a shareable Uri to [onReady]. */

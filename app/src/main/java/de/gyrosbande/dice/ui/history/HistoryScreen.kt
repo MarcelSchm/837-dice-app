@@ -125,7 +125,23 @@ fun HistoryScreen(viewModel: HistoryViewModel, onOpenRound: (String) -> Unit, on
                     onDeleteRequest = { roundToDelete = it },
                 )
             } else {
-                StatsTab(rounds)
+                StatsTab(
+                    rounds = rounds,
+                    onShareImage = {
+                        val subtitle = viewModel.selectedYear?.let { "Open Flair $it" }
+                            ?: "Alle Festivals"
+                        viewModel.shareStatsImage(rounds, subtitle) { uri ->
+                            val intent = Intent(Intent.ACTION_SEND).apply {
+                                type = "image/png"
+                                putExtra(Intent.EXTRA_STREAM, uri)
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            context.startActivity(
+                                Intent.createChooser(intent, "Hall of Fame teilen")
+                            )
+                        }
+                    },
+                )
             }
         }
 
@@ -292,7 +308,7 @@ private fun RoundListItem(round: HistoryRound, onClick: () -> Unit, onDelete: ()
 }
 
 @Composable
-private fun StatsTab(rounds: List<HistoryRound>) {
+private fun StatsTab(rounds: List<HistoryRound>, onShareImage: () -> Unit) {
     if (rounds.isEmpty()) {
         Text(
             "Noch keine Daten. Die Hall of Fame füllt sich mit jeder Runde.",
@@ -305,7 +321,13 @@ private fun StatsTab(rounds: List<HistoryRound>) {
         )
         return
     }
-    LazyColumn {
-        item { StatsContent(StatsCalculator.calculate(rounds)) }
+    Column {
+        OutlinedButton(onClick = onShareImage, modifier = Modifier.fillMaxWidth()) {
+            Text("Als Bild teilen 📤")
+        }
+        Spacer(Modifier.height(12.dp))
+        LazyColumn {
+            item { StatsContent(StatsCalculator.calculate(rounds)) }
+        }
     }
 }
