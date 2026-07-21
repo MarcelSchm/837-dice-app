@@ -3,6 +3,10 @@
 All notable changes to 837 Dice. Generated from
 [Conventional Commits](https://www.conventionalcommits.org) with
 [git-cliff](https://git-cliff.org).
+## [2.7] - 2026-07-21
+
+### 🎲 New
+- Applause on the Prosecco celebration
 ## [2.6] - 2026-07-21
 
 ### 🎲 New
