@@ -187,6 +187,35 @@ and can change (prices/lineup) - the source photos live in `images/`.
 
 - Watch complications and tiles (phase 3) - see [WEAR.md](WEAR.md).
 
+## CI and supply chain
+
+Every push and pull request validates the Gradle wrapper, runs the unit
+tests, runs Android Lint, builds both APKs, generates a CycloneDX SBOM and
+scans it for known CVEs. A `v*` tag additionally publishes a GitHub release
+with the APKs and the SBOM attached.
+
+A few deliberate choices:
+
+- **The keystore is the crown jewel.** The app has no internet permission,
+  no accounts and no server, so the realistic attack path is not the app but
+  the CI: whoever gets `KEYSTORE_*` out of a workflow run can sign APKs the
+  group would trust. Hence actions are pinned to commit SHAs (a tag can be
+  moved), and only the release job has `contents: write`.
+- **SBOM** (`837-dice-*-sbom.cdx.json`, CycloneDX) ships with every release,
+  so "was this build affected by CVE-X?" stays answerable afterwards.
+- **CVE scan is reported, not blocking.** With no network permission a
+  library CVE is rarely reachable here; a red build before the festival
+  would cost more than it buys. The findings land in the job summary.
+- **Lint blocks on branches and PRs, not on tags** - findings get fixed in
+  peace, but never stand between the group and their build.
+- **Dependabot** proposes grouped updates weekly (Gradle + Actions), and
+  `dependency-submission` feeds GitHub's dependency graph so vulnerability
+  alerts also cover indirect dependencies.
+
+Not done on purpose: CodeQL (an offline app without foreign input gives it
+nothing to find) and Gradle dependency verification (every bump would mean
+hand-maintaining hashes).
+
 ## Architecture
 
 - **Stack:** Kotlin + Jetpack Compose (Material 3), single activity,

@@ -13,6 +13,7 @@ kotlinxSerializationJson = "1.8.1"
 wearCompose = "1.4.1"
 playServicesWearable = "18.2.0"
 wearComplications = "1.2.1"
+cyclonedx = "3.3.0"
 
 [libraries]
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
@@ -43,3 +44,5 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+# Generates the CycloneDX SBOM (software bill of materials) for releases.
+cyclonedx = { id = "org.cyclonedx.bom", version.ref = "cyclonedx" }

@@ -1,0 +1,43 @@
+# Weekly dependency updates. Grouped on purpose: this app ships once a year,
+# a dozen single-dependency PRs would just be noise. Nothing reaches a phone
+# until a v* tag is pushed, so merging a bump is low risk - CI still runs the
+# dice-rule tests on every one of these PRs.
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    commit-message:
+      # Matches the Conventional Commits setup git-cliff builds on.
+      prefix: chore
+      include: scope
+    groups:
+      androidx:
+        patterns:
+          - "androidx.*"
+          - "com.google.android.gms:play-services-wearable"
+      kotlin:
+        patterns:
+          - "org.jetbrains.kotlin*"
+          - "com.google.devtools.ksp*"
+      build-tools:
+        patterns:
+          - "com.android.*"
+          - "org.cyclonedx*"
+
+  # The workflow pins actions to commit SHAs; Dependabot keeps those current.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      actions:
+        patterns: ["*"]

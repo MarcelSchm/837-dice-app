@@ -1,9 +1,12 @@
 name: Android CI
 
-# On every push to main: run tests and build the APK (downloadable as a
-# workflow artifact). On a version tag (v1.0, v1.1, ...): additionally create
-# a GitHub release with the APK attached - anyone can download that without
-# a GitHub account.
+# On every push to main and every PR: validate the Gradle wrapper, run the
+# tests, lint, build the APKs, generate an SBOM and scan it for known CVEs.
+# On a version tag (v1.0, v1.1, ...): additionally create a GitHub release
+# with the APKs and the SBOM attached.
+#
+# Actions are pinned to commit SHAs, not tags: a tag can be moved, and the
+# release job handles the signing keystore. Dependabot keeps the pins current.
 on:
   push:
     branches: [main]
@@ -11,34 +14,60 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Least privilege by default - the two jobs that need to write say so.
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Superseded runs are pointless, but never abort a release half-way.
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+
 jobs:
   build:
-    name: Tests & APK
+    name: Tests, APK & SBOM
     runs-on: ubuntu-latest
-    permissions:
-      contents: write # needed to create releases
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
-        with:
-          # Full history + tags, needed by git-cliff for release notes
-          fetch-depth: 0
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
         with:
           distribution: temurin
           java-version: "21"
 
+      # A tampered gradle-wrapper.jar would run arbitrary code in this
+      # workflow - checked against the official checksums before any build.
+      - name: Validate the Gradle wrapper
+        uses: gradle/actions/wrapper-validation@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
+
       - name: Set up Gradle (with cache)
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
       - name: Run unit tests (the dice rules!)
         run: ./gradlew test
+
+      # Android-specific checks (exported components, manifest issues, ...).
+      # Blocking on branches and PRs, where a finding can be fixed in peace -
+      # but never on a release tag: a lint warning must not stop the group
+      # from getting their build the evening before the festival.
+      - name: Android Lint
+        continue-on-error: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        run: ./gradlew :app:lintRelease :wear:lintRelease
+
+      - name: Upload lint reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: lint-reports
+          path: "*/build/reports/lint-results-*.html"
+          retention-days: 14
+          if-no-files-found: ignore
 
       - name: Restore release keystore from secret (if configured)
         env:
@@ -63,24 +92,83 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
         run: ./gradlew assembleRelease
 
-      - name: Rename APKs
-        run: |
-          VERSION="${GITHUB_REF_NAME}"
-          cp app/build/outputs/apk/release/app-release.apk \
-             "837-dice-${VERSION//\//-}-${GITHUB_SHA::7}.apk"
-          cp wear/build/outputs/apk/release/wear-release.apk \
-             "837-dice-wear-${VERSION//\//-}-${GITHUB_SHA::7}.apk"
+      # The bill of materials: every library that ends up in the app, with
+      # versions and purls. Shipped with the release so it is always possible
+      # to answer "was this app affected by CVE-X?" after the fact.
+      - name: Generate SBOM (CycloneDX)
+        run: ./gradlew cyclonedxBom
 
-      - name: Upload APK as artifact
-        uses: actions/upload-artifact@v4
+      - name: Collect release files
+        run: |
+          VERSION="${GITHUB_REF_NAME//\//-}"
+          cp app/build/outputs/apk/release/app-release.apk \
+             "837-dice-${VERSION}-${GITHUB_SHA::7}.apk"
+          cp wear/build/outputs/apk/release/wear-release.apk \
+             "837-dice-wear-${VERSION}-${GITHUB_SHA::7}.apk"
+          cp build/reports/cyclonedx/bom.json \
+             "837-dice-${VERSION}-sbom.cdx.json"
+
+      - name: Upload APKs and SBOM as artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: 837-dice-apk
-          path: 837-dice-*.apk
+          path: |
+            837-dice-*.apk
+            837-dice-*-sbom.cdx.json
           retention-days: 90
 
+      # Known vulnerabilities in what we actually ship. Reported, not
+      # blocking: the app has no internet permission at all, so a CVE in a
+      # library is rarely reachable here - but we still want to know.
+      - name: Scan the SBOM for known CVEs (Trivy)
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: sbom
+          scan-ref: build/reports/cyclonedx/bom.json
+          format: table
+          output: trivy-report.txt
+          severity: HIGH,CRITICAL
+          exit-code: "0"
+
+      - name: Put the CVE report into the job summary
+        if: always()
+        run: |
+          {
+            echo "## Known CVEs (HIGH/CRITICAL)"
+            echo ""
+            if [ -s trivy-report.txt ]; then
+              echo '```'
+              cat trivy-report.txt
+              echo '```'
+            else
+              echo "Nothing found. 🎉"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  release:
+    name: GitHub release
+    runs-on: ubuntu-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    # Only this job may write - the build job above cannot.
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          # Full history + tags, needed by git-cliff for release notes
+          fetch-depth: 0
+
+      - name: Download the built APKs and SBOM
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: 837-dice-apk
+
       - name: Generate release notes (git-cliff)
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: orhun/git-cliff-action@v4
+        uses: orhun/git-cliff-action@f50e11560dce63f7c33227798f90b924471a88b5 # v4
         with:
           config: cliff.toml
           # Only the changes of the tag being released
@@ -89,7 +177,6 @@ jobs:
           OUTPUT: RELEASE_NOTES.md
 
       - name: Add install instructions to release notes
-        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           cat >> RELEASE_NOTES.md <<'EOF'
 
@@ -100,13 +187,17 @@ jobs:
           **Pixel Watch:** the `-wear-` APK is the standalone watch app -
           sideload it onto the watch via `adb install` (developer mode +
           wireless debugging on the watch).
+
+          **SBOM:** `*-sbom.cdx.json` lists every library in this build
+          (CycloneDX).
           EOF
 
-      - name: Create GitHub release (v* tags only)
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
-          files: 837-dice-*.apk
+          files: |
+            837-dice-*.apk
+            837-dice-*-sbom.cdx.json
           body_path: RELEASE_NOTES.md
 
   # After a release tag, regenerate CHANGELOG.md and push it back to main
@@ -114,20 +205,20 @@ jobs:
   changelog:
     name: Update CHANGELOG.md
     runs-on: ubuntu-latest
-    needs: build
+    needs: release
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: write
 
     steps:
       - name: Check out main
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: main
           fetch-depth: 0
 
       - name: Regenerate CHANGELOG.md
-        uses: orhun/git-cliff-action@v4
+        uses: orhun/git-cliff-action@f50e11560dce63f7c33227798f90b924471a88b5 # v4
         with:
           config: cliff.toml
           args: --verbose
@@ -146,3 +237,29 @@ jobs:
           else
             echo "CHANGELOG.md already up to date."
           fi
+
+  # Reports the full transitive dependency tree to GitHub's dependency graph.
+  # Without this, Dependabot only sees the version catalog and cannot warn
+  # about vulnerabilities in indirect dependencies.
+  dependency-graph:
+    name: Submit dependency graph
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Validate the Gradle wrapper
+        uses: gradle/actions/wrapper-validation@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
+
+      - name: Submit dependencies
+        uses: gradle/actions/dependency-submission@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
