@@ -84,11 +84,23 @@ class RoundViewModel(
     val currentPlayer: Player? get() = session?.players?.getOrNull(results.size)
     val isFinished: Boolean get() = session != null && results.size == players.size
 
-    init {
+    private var started = false
+
+    /**
+     * Starts the round with the line-up chosen beforehand, in exactly that
+     * seating order. Falls back to everyone ticked "spielt mit" when no
+     * line-up was handed over (e.g. after process death). Idempotent - the
+     * screen calls this on every recomposition.
+     */
+    fun start(orderedPlayerIds: List<Long>) {
+        if (started) return
+        started = true
         viewModelScope.launch {
-            val activePlayers = playerRepository.activePlayers()
-            if (activePlayers.isNotEmpty()) {
-                session = RoundSession(activePlayers)
+            val byId = playerRepository.allPlayers().associateBy { it.id }
+            val players = orderedPlayerIds.mapNotNull { byId[it] }
+                .ifEmpty { playerRepository.activePlayers() }
+            if (players.isNotEmpty()) {
+                session = RoundSession(players)
                 controller = RollController(menuRepository.categories())
             }
             loading = false

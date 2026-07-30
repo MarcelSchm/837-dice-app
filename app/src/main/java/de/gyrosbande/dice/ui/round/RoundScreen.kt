@@ -23,6 +23,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,7 +44,16 @@ import de.gyrosbande.dice.ui.roll.RollPanel
  * grouped order (with total) is shown for ordering at the counter.
  */
 @Composable
-fun RoundScreen(viewModel: RoundViewModel, onGoToPlayers: () -> Unit, onDone: () -> Unit) {
+fun RoundScreen(
+    viewModel: RoundViewModel,
+    playerIds: List<Long>,
+    onGoToPlayers: () -> Unit,
+    onDone: () -> Unit,
+) {
+    // The line-up picked on the previous screen decides who rolls, in which
+    // order. start() is idempotent, so recompositions are harmless.
+    LaunchedEffect(playerIds) { viewModel.start(playerIds) }
+
     val controller = viewModel.controller
 
     if (viewModel.loading) {

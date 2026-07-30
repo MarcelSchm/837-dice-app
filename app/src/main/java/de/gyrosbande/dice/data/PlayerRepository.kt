@@ -15,6 +15,10 @@ class PlayerRepository(private val playerDao: PlayerDao) {
     suspend fun activePlayers(): List<Player> =
         playerDao.activePlayers().map { it.toDomain() }
 
+    /** Everyone the app knows - the pool the line-up is picked from. */
+    suspend fun allPlayers(): List<Player> =
+        playerDao.players().map { it.toDomain() }
+
     /**
      * Adds a player. Names are capitalized and must be unique (ignoring
      * case) - with two Marcels in the group, one becomes "Marcel S", so

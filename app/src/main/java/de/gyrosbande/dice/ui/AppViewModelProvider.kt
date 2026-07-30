@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import de.gyrosbande.dice.DiceApp
 import de.gyrosbande.dice.ui.history.HistoryViewModel
 import de.gyrosbande.dice.ui.home.HomeViewModel
+import de.gyrosbande.dice.ui.lineup.LineupViewModel
 import de.gyrosbande.dice.ui.menu.MenuViewModel
 import de.gyrosbande.dice.ui.players.PlayersViewModel
 import de.gyrosbande.dice.ui.roll.QuickRollViewModel
@@ -25,6 +26,12 @@ object AppViewModelProvider {
             RoundViewModel(
                 context = diceApp(),
                 menuRepository = diceApp().menuRepository,
+                playerRepository = diceApp().playerRepository,
+                roundRepository = diceApp().roundRepository,
+            )
+        }
+        initializer {
+            LineupViewModel(
                 playerRepository = diceApp().playerRepository,
                 roundRepository = diceApp().roundRepository,
             )

@@ -9,13 +9,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import de.gyrosbande.dice.ui.AppViewModelProvider
 import de.gyrosbande.dice.ui.HomeScreen
 import de.gyrosbande.dice.ui.history.HistoryDetailScreen
 import de.gyrosbande.dice.ui.history.HistoryScreen
+import de.gyrosbande.dice.ui.lineup.LineupScreen
 import de.gyrosbande.dice.ui.menu.CategoryEditScreen
 import de.gyrosbande.dice.ui.menu.MenuScreen
 import de.gyrosbande.dice.ui.players.PlayersScreen
@@ -39,7 +42,7 @@ class MainActivity : ComponentActivity() {
                         composable("home") {
                             HomeScreen(
                                 viewModel = viewModel(factory = AppViewModelProvider.Factory),
-                                onStartRound = { navController.navigate("round") },
+                                onStartRound = { navController.navigate("lineup") },
                                 onQuickRoll = { navController.navigate("quickroll") },
                                 onPlayers = { navController.navigate("players") },
                                 onHistory = { navController.navigate("history") },
@@ -80,9 +83,35 @@ class MainActivity : ComponentActivity() {
                                 onBack = { navController.popBackStack() },
                             )
                         }
-                        composable("round") {
+                        composable("lineup") {
+                            LineupScreen(
+                                viewModel = viewModel(factory = AppViewModelProvider.Factory),
+                                onStart = { ids ->
+                                    // popUpTo("home"): after the round, "back"
+                                    // goes home instead of into the line-up again.
+                                    navController.navigate("round?players=${ids.joinToString(",")}") {
+                                        popUpTo("home")
+                                    }
+                                },
+                                onBack = { navController.popBackStack() },
+                            )
+                        }
+                        composable(
+                            route = "round?players={players}",
+                            arguments = listOf(
+                                navArgument("players") {
+                                    type = NavType.StringType
+                                    defaultValue = ""
+                                }
+                            ),
+                        ) { backStackEntry ->
+                            val playerIds = backStackEntry.arguments?.getString("players")
+                                .orEmpty()
+                                .split(",")
+                                .mapNotNull { it.toLongOrNull() }
                             RoundScreen(
                                 viewModel = viewModel(factory = AppViewModelProvider.Factory),
+                                playerIds = playerIds,
                                 onGoToPlayers = {
                                     navController.navigate("players") {
                                         popUpTo("home")
