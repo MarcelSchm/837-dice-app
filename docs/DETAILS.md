@@ -108,7 +108,12 @@ and can change (prices/lineup) - the source photos live in `images/`.
 - Roll virtually or enter the result of real dice, with the automatic
   1-vs-2-dice decision and the wrap rule.
 - Player management ("spielt mit" checkbox picks who joins the next round).
-- Round flow: active players roll in turn; the round ends in a grouped
+- Line-up before each round: who sits at the table today and in which order.
+  The player list stays the same, the seating does not - people skip a day,
+  others only turn up on Saturday. Pre-filled with the previous round's
+  seating, reordered with up/down arrows, and someone new can be added on the
+  spot. The chosen order is the turn order.
+- Round flow: the line-up rolls in turn; the round ends in a grouped
   order summary ("2× Ouzo, 1× Flasche Prosecco ...") with the total price,
   ready to read out to the waiter.
 - Menu and results are persisted (Room); roll results are stored as
@@ -117,9 +122,18 @@ and can change (prices/lineup) - the source photos live in `images/`.
 - History: per-day round list with detail view and a festival-year filter.
   Quick rolls ("Schnell würfeln") deliberately don't count - only finished
   rounds enter history and statistics.
+- Correcting a past round: open it in the history to add someone who only
+  joined an hour later (they roll now, or the drink they had is picked from
+  the menu) or to remove a result recorded by mistake. The round total
+  follows automatically; the last remaining result can't be removed - delete
+  the whole round instead.
 - Hall of fame fun facts: Prosecco king, top spender, the group's
-  most-rolled drink, category magnet, doubles champion, wrap victim, plus
-  the overall tally. "Als Bild teilen" renders the same standings into a
+  most-rolled drink, category magnet, doubles champion, wrap victim,
+  "Dauergast" and "Seltener Gast" (who was there most and least often), plus
+  the overall tally. Attendance is derived from the rounds themselves - a
+  player took part in a round exactly if they have a result in it - so it
+  works on all existing history. Shown from three rounds on, below that it
+  would be noise. "Als Bild teilen" renders the same standings into a
   black/gold PNG (logo, fun facts, tally) via plain Canvas/Paint and hands
   it to the share sheet, ready for the WhatsApp group. The wording lives in
   StatsPresentation (:core) so the on-screen cards and the image always
@@ -133,7 +147,11 @@ and can change (prices/lineup) - the source photos live in `images/`.
   group) or save it locally, and merge files from other phones. The merge
   is idempotent - rounds are deduplicated by uuid, players matched by
   name (case-insensitive), so everyone can import everyone's export in
-  any order.
+  any order. Since rounds can be corrected after the fact, a known uuid is
+  not automatically skipped: every round carries an `updatedAt`, and a round
+  changed more recently than the local copy replaces it. Equal timestamps
+  mean the same version, so re-importing a file stays a no-op, and a file
+  from an older app version (no timestamp) never overwrites anything.
 - Unavailable drinks: if San Remo is out of the rolled drink, either
   reroll the drink within the same category (the house rule) or pick a
   replacement from the menu by hand - the original rolls stay recorded

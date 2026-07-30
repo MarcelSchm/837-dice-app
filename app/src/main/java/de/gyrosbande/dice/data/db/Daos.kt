@@ -82,6 +82,12 @@ interface PlayerDao {
     suspend fun delete(player: PlayerEntity)
 }
 
+/** Just enough of a round to decide whether an import supersedes it. */
+data class RoundVersion(
+    val uuid: String,
+    val updatedAt: Long?,
+)
+
 data class RoundWithResults(
     @Embedded val round: RoundEntity,
     @Relation(parentColumn = "id", entityColumn = "roundId")
@@ -124,8 +130,18 @@ interface RoundDao {
     @Insert
     suspend fun insertResults(results: List<RollResultEntity>)
 
-    @Query("UPDATE rounds SET finishedAt = :finishedAt WHERE id = :roundId")
+    @Query("UPDATE rounds SET finishedAt = :finishedAt, updatedAt = :finishedAt WHERE id = :roundId")
     suspend fun finishRound(roundId: Long, finishedAt: Long)
+
+    /** Marks a round as changed, so a later import can tell versions apart. */
+    @Query("UPDATE rounds SET updatedAt = :updatedAt WHERE id = :roundId")
+    suspend fun touchRound(roundId: Long, updatedAt: Long)
+
+    @Query("SELECT roundId FROM roll_results WHERE id = :id")
+    suspend fun roundIdOfResult(id: Long): Long?
+
+    @Query("SELECT roundId FROM extra_order_items WHERE id = :id")
+    suspend fun roundIdOfExtra(id: Long): Long?
 
     /** Only finished rounds count for history, statistics and export. */
     @Transaction
@@ -138,6 +154,39 @@ interface RoundDao {
 
     @Query("SELECT uuid FROM rounds")
     suspend fun allRoundUuids(): List<String>
+
+    /** uuid plus change stamp of every local round - the basis for merging. */
+    @Query("SELECT uuid, updatedAt FROM rounds")
+    suspend fun roundVersions(): List<RoundVersion>
+
+    @Query("SELECT id FROM rounds WHERE uuid = :uuid")
+    suspend fun roundIdByUuid(uuid: String): Long?
+
+    /**
+     * Player names of the most recent finished round, in turn order - the
+     * suggestion for tonight's line-up (people tend to sit down the same way).
+     */
+    @Query(
+        "SELECT r.playerName FROM roll_results r " +
+            "WHERE r.roundId = (" +
+            "SELECT id FROM rounds WHERE finishedAt IS NOT NULL ORDER BY startedAt DESC LIMIT 1" +
+            ") ORDER BY r.createdAt"
+    )
+    suspend fun lastRoundPlayerNames(): List<String>
+
+    @Query("DELETE FROM roll_results WHERE id = :id")
+    suspend fun deleteResultById(id: Long)
+
+    /**
+     * Row ids of a round's results in the same order as the history shows
+     * them (by createdAt), so a result can be addressed by its position.
+     */
+    @Query(
+        "SELECT r.id FROM roll_results r " +
+            "WHERE r.roundId = (SELECT id FROM rounds WHERE uuid = :uuid) " +
+            "ORDER BY r.createdAt"
+    )
+    suspend fun resultIdsOfRound(uuid: String): List<Long>
 
     /** Deletes the round; its results follow via the CASCADE foreign key. */
     @Query("DELETE FROM rounds WHERE uuid = :uuid")

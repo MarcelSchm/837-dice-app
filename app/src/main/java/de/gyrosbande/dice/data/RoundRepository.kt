@@ -50,6 +50,7 @@ class RoundRepository(private val roundDao: RoundDao) {
      */
     suspend fun updateResult(resultId: Long, result: PlayerOutcome, wasVirtual: Boolean) {
         val outcome = result.outcome
+        roundDao.roundIdOfResult(resultId)?.let { touch(it) }
         roundDao.updateResult(
             id = resultId,
             categoryName = outcome.category.name,
@@ -67,9 +68,40 @@ class RoundRepository(private val roundDao: RoundDao) {
     suspend fun finishRound(roundId: Long) =
         roundDao.finishRound(roundId, System.currentTimeMillis())
 
+    /**
+     * Players of the most recent round, in turn order. Used to pre-fill the
+     * line-up - empty when nothing has been played yet.
+     */
+    suspend fun lastRoundPlayerNames(): List<String> = roundDao.lastRoundPlayerNames()
+
+    suspend fun roundIdByUuid(uuid: String): Long? = roundDao.roundIdByUuid(uuid)
+
+    /**
+     * Appends a result to an already finished round - for someone who only
+     * joined the table later and was missed at the time. Lands at the end of
+     * the round, which is exactly where they belong.
+     */
+    suspend fun addResultToRound(roundId: Long, result: PlayerOutcome, wasVirtual: Boolean): Long {
+        val id = saveResult(roundId, result, wasVirtual)
+        touch(roundId)
+        return id
+    }
+
+    /** Removes a single result from a round (recorded by mistake). */
+    suspend fun deleteResult(resultId: Long) {
+        // Read the round before the row is gone.
+        val roundId = roundDao.roundIdOfResult(resultId)
+        roundDao.deleteResultById(resultId)
+        roundId?.let { touch(it) }
+    }
+
+    /** Records that a round was changed - see RoundEntity.updatedAt. */
+    private suspend fun touch(roundId: Long) =
+        roundDao.touchRound(roundId, System.currentTimeMillis())
+
     /** Adds a manual order line (food, beer ...) and returns its row id. */
-    suspend fun addExtra(roundId: Long, extra: ExtraItem): Long =
-        roundDao.insertExtra(
+    suspend fun addExtra(roundId: Long, extra: ExtraItem): Long {
+        val id = roundDao.insertExtra(
             ExtraOrderItemEntity(
                 roundId = roundId,
                 label = extra.label,
@@ -78,6 +110,13 @@ class RoundRepository(private val roundDao: RoundDao) {
                 createdAt = System.currentTimeMillis(),
             )
         )
+        touch(roundId)
+        return id
+    }
 
-    suspend fun removeExtra(extraId: Long) = roundDao.deleteExtraById(extraId)
+    suspend fun removeExtra(extraId: Long) {
+        val roundId = roundDao.roundIdOfExtra(extraId)
+        roundDao.deleteExtraById(extraId)
+        roundId?.let { touch(it) }
+    }
 }

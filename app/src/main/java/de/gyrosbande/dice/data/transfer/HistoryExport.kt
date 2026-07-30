@@ -43,6 +43,12 @@ data class ExportRound(
     val finishedAt: Long,
     val results: List<ExportResult>,
     val extraItems: List<ExportExtraItem> = emptyList(),
+    /**
+     * When the round was last corrected. Lets an import tell a newer version
+     * of a round from the one already on the phone. Null in files written by
+     * older app versions - those never win over a local copy.
+     */
+    val updatedAt: Long? = null,
 )
 
 @Serializable

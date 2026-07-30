@@ -16,7 +16,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         RollResultEntity::class,
         ExtraOrderItemEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -68,6 +68,19 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * v4 -> v5: rounds remember when they were last changed. Rounds can
+         * be corrected now, and an import has to be able to tell a newer
+         * version of a round from the one already on the phone. Existing
+         * rounds stay NULL - "never touched", so they never win over an
+         * incoming corrected version.
+         */
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE rounds ADD COLUMN updatedAt INTEGER")
+            }
+        }
+
         @Volatile
         private var instance: AppDatabase? = null
 
@@ -78,7 +91,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "dice837.db",
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .build()
                     .also { instance = it }
             }

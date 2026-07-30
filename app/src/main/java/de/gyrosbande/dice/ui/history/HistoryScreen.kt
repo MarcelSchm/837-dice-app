@@ -189,6 +189,9 @@ fun HistoryScreen(viewModel: HistoryViewModel, onOpenRound: (String) -> Unit, on
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text("${report.importedRounds} Runden importiert")
+                    if (report.updatedRounds > 0) {
+                        Text("${report.updatedRounds} korrigierte Runde(n) übernommen")
+                    }
                     Text("${report.skippedRounds} übersprungen (schon vorhanden)")
                     if (report.newPlayers.isNotEmpty()) {
                         Text("Neue Spieler: ${report.newPlayers.joinToString(", ")}")

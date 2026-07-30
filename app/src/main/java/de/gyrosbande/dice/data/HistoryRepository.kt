@@ -36,6 +36,12 @@ class HistoryRepository(private val database: AppDatabase) {
      */
     suspend fun deleteRound(uuid: String) = roundDao.deleteRoundByUuid(uuid)
 
+    /**
+     * Row ids of a round's results, in the same order as
+     * [HistoryRound.results] - lets the UI address a result by position.
+     */
+    suspend fun resultIdsOf(uuid: String): List<Long> = roundDao.resultIdsOfRound(uuid)
+
     suspend fun buildExport(appVersion: String): HistoryExport =
         HistoryExport(
             exportedAt = System.currentTimeMillis(),
@@ -51,9 +57,14 @@ class HistoryRepository(private val database: AppDatabase) {
     suspend fun import(export: HistoryExport): MergeReport = database.withTransaction {
         val plan = HistoryMerge.plan(
             import = export,
-            existingRoundUuids = roundDao.allRoundUuids().toSet(),
+            existingRounds = roundDao.roundVersions().associate { it.uuid to it.updatedAt },
             existingPlayerNames = playerDao.players().map { it.name },
         )
+
+        // A corrected round comes in as a whole; drop the old one first (its
+        // results follow via CASCADE). Inside the transaction, so a failure
+        // can never leave the history half-replaced.
+        plan.roundsToReplace.forEach { roundDao.deleteRoundByUuid(it.uuid) }
 
         plan.playersToCreate.forEach { name ->
             playerDao.insert(PlayerEntity(name = name))
@@ -64,12 +75,13 @@ class HistoryRepository(private val database: AppDatabase) {
             { it.id },
         )
 
-        plan.roundsToImport.forEach { round ->
+        (plan.roundsToImport + plan.roundsToReplace).forEach { round ->
             val roundId = roundDao.insertRound(
                 RoundEntity(
                     uuid = round.uuid,
                     startedAt = round.startedAt,
                     finishedAt = round.finishedAt,
+                    updatedAt = round.updatedAt,
                 )
             )
             roundDao.insertExtras(
@@ -134,6 +146,7 @@ class HistoryRepository(private val database: AppDatabase) {
         uuid = round.uuid,
         startedAt = round.startedAt,
         finishedAt = round.finishedAt ?: round.startedAt,
+        updatedAt = round.updatedAt,
         results = results.sortedBy { it.createdAt }.map { result ->
             ExportResult(
                 playerName = result.playerName,

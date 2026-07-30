@@ -57,6 +57,13 @@ data class RoundEntity(
     val uuid: String,
     val startedAt: Long,
     val finishedAt: Long? = null,
+    /**
+     * When the round was last changed. Rounds used to be write-once, but they
+     * can be corrected now (someone joined late), so an export has to be able
+     * to tell a newer version of a round from an older one. Null = never
+     * touched since it was recorded (rows from before schema v5).
+     */
+    val updatedAt: Long? = null,
 )
 
 /**
