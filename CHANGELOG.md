@@ -3,6 +3,17 @@
 All notable changes to 837 Dice. Generated from
 [Conventional Commits](https://www.conventionalcommits.org) with
 [git-cliff](https://git-cliff.org).
+## [2.8] - 2026-07-30
+
+### 🎲 New
+- Open Flair countdown complication for the watch face (phase 3)
+- "Dauergast" and "Seltener Gast" in the hall of fame
+- Pick the line-up and seating order before a round
+- Correct a round afterwards in the history
+- Corrections reach the other phones too (schema v5)
+
+### 📚 Documentation
+- Record the Open Flair countdown complication (phase 3)
 ## [2.7] - 2026-07-21
 
 ### 🎲 New
