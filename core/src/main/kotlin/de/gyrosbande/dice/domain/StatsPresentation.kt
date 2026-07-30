@@ -41,6 +41,14 @@ object StatsPresentation {
             add(FunFactLine("🔄", "Wrap-Opfer", it.names.joinToString(" & "),
                 "${it.count}× unten durch und oben wieder reingerutscht"))
         }
+        stats.regular?.let {
+            add(FunFactLine("🏅", "Dauergast", it.names.joinToString(" & "),
+                "bei ${it.count} von ${stats.roundCount} Runden dabei"))
+        }
+        stats.rareGuest?.let {
+            add(FunFactLine("👻", "Seltener Gast", it.names.joinToString(" & "),
+                "nur bei ${it.count} von ${stats.roundCount} Runden dabei"))
+        }
     }
 
     /** "3 Runden, 12 Würfe" - the tally line, with singular/plural. */

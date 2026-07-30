@@ -167,4 +167,98 @@ class StatsCalculatorTest {
         assertEquals(2000, stats.totalCents)
         assertEquals("20,00 €", stats.totalFormatted)
     }
+
+    @Test
+    fun `regular and rareGuest with clear attendance difference`() {
+        val stats = StatsCalculator.calculate(
+            listOf(
+                round(result("Marcel"), result("Kevin")),
+                round(result("Marcel"), result("Kevin")),
+                round(result("Marcel"), result("Jonas")),
+                round(result("Marcel")),
+            )
+        )
+        assertEquals(listOf("Marcel"), stats.regular!!.names)
+        assertEquals(4, stats.regular!!.count)
+        assertEquals(listOf("Jonas"), stats.rareGuest!!.names)
+        assertEquals(1, stats.rareGuest!!.count)
+    }
+
+    @Test
+    fun `regular with tie shows all names sorted alphabetically`() {
+        val stats = StatsCalculator.calculate(
+            listOf(
+                round(result("Marcel"), result("Kevin")),
+                round(result("Marcel"), result("Kevin")),
+                round(result("Jonas")),
+            )
+        )
+        assertEquals(listOf("Kevin", "Marcel"), stats.regular!!.names)
+        assertEquals(2, stats.regular!!.count)
+        assertEquals(listOf("Jonas"), stats.rareGuest!!.names)
+        assertEquals(1, stats.rareGuest!!.count)
+    }
+
+    @Test
+    fun `less than 3 rounds yields null for regular and rareGuest`() {
+        val twoRounds = StatsCalculator.calculate(
+            listOf(
+                round(result("Marcel"), result("Kevin")),
+                round(result("Marcel")),
+            )
+        )
+        assertNull(twoRounds.regular)
+        assertNull(twoRounds.rareGuest)
+
+        val oneRound = StatsCalculator.calculate(
+            listOf(round(result("Marcel")))
+        )
+        assertNull(oneRound.regular)
+        assertNull(oneRound.rareGuest)
+    }
+
+    @Test
+    fun `all players in all rounds yields no rareGuest`() {
+        val stats = StatsCalculator.calculate(
+            listOf(
+                round(result("Marcel"), result("Kevin"), result("Jonas")),
+                round(result("Marcel"), result("Kevin"), result("Jonas")),
+                round(result("Marcel"), result("Kevin"), result("Jonas")),
+            )
+        )
+        assertEquals(listOf("Jonas", "Kevin", "Marcel"), stats.regular!!.names)
+        assertEquals(3, stats.regular!!.count)
+        assertNull(stats.rareGuest)
+    }
+
+    @Test
+    fun `single player yields no rareGuest`() {
+        val stats = StatsCalculator.calculate(
+            listOf(
+                round(result("Marcel")),
+                round(result("Marcel")),
+                round(result("Marcel")),
+            )
+        )
+        assertEquals(listOf("Marcel"), stats.regular!!.names)
+        assertEquals(3, stats.regular!!.count)
+        assertNull(stats.rareGuest)
+    }
+
+    @Test
+    fun `two results in one round still count as a single attendance`() {
+        // Reachable once results can be added to a round afterwards. Without
+        // counting per round, Marcel would end up "bei 4 von 3 Runden dabei".
+        val stats = StatsCalculator.calculate(
+            listOf(
+                round(result("Marcel"), result("Marcel"), result("Kevin")),
+                round(result("Marcel"), result("Kevin")),
+                round(result("Marcel")),
+            )
+        )
+        assertEquals(listOf("Marcel"), stats.regular!!.names)
+        assertEquals(3, stats.regular!!.count)
+        assertEquals(listOf("Kevin"), stats.rareGuest!!.names)
+        assertEquals(2, stats.rareGuest!!.count)
+    }
 }

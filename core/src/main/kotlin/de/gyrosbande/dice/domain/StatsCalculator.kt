@@ -32,6 +32,10 @@ data class Stats(
     val doublesChamp: TopEntry?,
     /** Most rolls where the wrap rule kicked in. */
     val wrapVictim: TopEntry?,
+    /** Who turned up for the most rounds. */
+    val regular: TopEntry?,
+    /** Who turned up for the fewest rounds (at least one). */
+    val rareGuest: TopEntry?,
 ) {
     val totalFormatted: String
         get() = "%d,%02d €".format(totalCents / 100, totalCents % 100)
@@ -43,8 +47,11 @@ object StatsCalculator {
     /** Drink name on the San Remo menu that crowns the Prosecco king. */
     const val PROSECCO_BOTTLE = "Flasche Prosecco"
 
+    private const val MIN_ROUNDS_FOR_ATTENDANCE = 3
+
     fun calculate(rounds: List<HistoryRound>): Stats {
         val results = rounds.flatMap { it.results }
+        val attendanceByPlayer = calculateAttendance(rounds)
 
         return Stats(
             roundCount = rounds.size,
@@ -58,6 +65,43 @@ object StatsCalculator {
             categoryMagnet = categoryMagnet(results),
             doublesChamp = topByCount(results.filter { it.isDouble }),
             wrapVictim = topByCount(results.filter { it.isWrap }),
+            regular = regular(attendanceByPlayer, rounds.size),
+            rareGuest = rareGuest(attendanceByPlayer, rounds.size),
+        )
+    }
+
+    /**
+     * Counts for each player how many rounds they took part in. A player
+     * counts once per round even with several results in it, so attendance
+     * can never exceed the round count ("bei 5 von 4 Runden dabei").
+     */
+    private fun calculateAttendance(rounds: List<HistoryRound>): Map<String, Int> {
+        return rounds
+            .flatMap { round -> round.results.map { it.playerName }.distinct() }
+            .groupingBy { it }
+            .eachCount()
+    }
+
+    /** Returns the player(s) with the most attendance, or null if rounds < 3. */
+    private fun regular(attendanceByPlayer: Map<String, Int>, roundCount: Int): TopEntry? {
+        if (roundCount < MIN_ROUNDS_FOR_ATTENDANCE) return null
+        val max = attendanceByPlayer.values.maxOrNull() ?: return null
+        return TopEntry(
+            names = attendanceByPlayer.filterValues { it == max }.keys.sorted(),
+            count = max,
+        )
+    }
+
+    /** Returns the player(s) with the least attendance, or null if conditions not met. */
+    private fun rareGuest(attendanceByPlayer: Map<String, Int>, roundCount: Int): TopEntry? {
+        if (roundCount < MIN_ROUNDS_FOR_ATTENDANCE) return null
+        if (attendanceByPlayer.size < 2) return null
+        val min = attendanceByPlayer.values.minOrNull() ?: return null
+        val max = attendanceByPlayer.values.maxOrNull() ?: return null
+        if (min == max) return null
+        return TopEntry(
+            names = attendanceByPlayer.filterValues { it == min }.keys.sorted(),
+            count = min,
         )
     }
 
