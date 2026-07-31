@@ -75,11 +75,17 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
     buildFeatures {
         compose = true
+    }
+}
+
+// The old `kotlinOptions { jvmTarget = "11" }` inside android {} is gone:
+// passing jvmTarget as a String became an error in newer Kotlin versions.
+// Same form as :core uses.
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
     }
 }
 
