@@ -15,18 +15,34 @@ updates:
       prefix: chore
       include: scope
     groups:
-      androidx:
+      # AGP and androidx move together or not at all: androidx 1.19+ demands
+      # AGP 9 and compileSdk 37, and AGP 9 in turn rewrites parts of the
+      # build DSL. Splitting them (as this file did at first) only produces
+      # pull requests that can never go green on their own.
+      toolchain:
         patterns:
+          - "com.android.*"
           - "androidx.*"
           - "com.google.android.gms:play-services-wearable"
       kotlin:
         patterns:
           - "org.jetbrains.kotlin*"
           - "com.google.devtools.ksp*"
-      build-tools:
+      tools:
         patterns:
-          - "com.android.*"
           - "org.cyclonedx*"
+
+    ignore:
+      # Held back until the toolchain migration (AGP 9 + compileSdk 37) is
+      # done as one deliberate piece of work - remove these two entries then.
+      # This only silences routine version updates; Dependabot's security
+      # alerts still come through.
+      - dependency-name: "androidx.core:core*"
+        versions: [">=1.19.0"]
+      - dependency-name: "androidx.lifecycle:*"
+        versions: [">=2.11.0"]
+      - dependency-name: "com.android.*"
+        update-types: ["version-update:semver-major"]
 
   # The workflow pins actions to commit SHAs; Dependabot keeps those current.
   - package-ecosystem: github-actions

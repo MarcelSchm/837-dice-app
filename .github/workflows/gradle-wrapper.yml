@@ -1,0 +1,39 @@
+name: Update Gradle Wrapper
+
+# Dependabot cannot do this one: its "gradle" ecosystem reads dependency
+# declarations (libs.versions.toml, build.gradle.kts), but not
+# gradle-wrapper.properties. Gradle itself would therefore never be updated
+# by anyone - which is exactly how the project ended up on Gradle 8.14.3
+# while AGP 9 wants 9.5.0. This closes that gap: once a week, propose a
+# wrapper update as a pull request.
+#
+# The action also verifies the checksum of the downloaded wrapper JAR, so
+# this is a supply-chain improvement as well, not just a version bump.
+on:
+  schedule:
+    # Mondays, same rhythm as Dependabot.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-wrapper:
+    name: Propose a Gradle wrapper update
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Update the Gradle wrapper
+        uses: gradle-update/update-gradle-wrapper-action@512b1875f3b6270828abfe77b247d5895a2da1e5 # v2
+        with:
+          labels: dependencies
+          # Heads-up: a PR opened with the default GITHUB_TOKEN does not
+          # trigger other workflows, so "Android CI" will not run on it by
+          # itself. Close and reopen the PR once to start it - or swap in a
+          # PAT here if that ever gets annoying.
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
