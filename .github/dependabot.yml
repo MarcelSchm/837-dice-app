@@ -43,6 +43,11 @@ updates:
         versions: [">=2.11.0"]
       - dependency-name: "com.android.*"
         update-types: ["version-update:semver-major"]
+      # Gradle has a narrow window here: 9.5.x still runs AGP 8.13, but 9.6
+      # changed an internal API that AGP 8.13 uses, so the build stops
+      # loading the plugin. Cap it until AGP 9 lands, then lift this too.
+      - dependency-name: "gradle-wrapper"
+        versions: [">=9.6.0"]
 
   # The workflow pins actions to commit SHAs; Dependabot keeps those current.
   - package-ecosystem: github-actions
