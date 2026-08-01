@@ -1,7 +1,24 @@
 # Security
 
-This is a private fun app: a dice game for a handful of friends at a
-festival. It has **no internet permission**, no accounts, no server and no
+## Why any of this exists
+
+Let's be honest up front: **none of this is necessary here.** This is a
+dice game for five friends at a festival. Nobody is attacking it, and the
+CRA does not apply to a private app that is not placed on the market.
+
+The real reason is that I wanted to learn how SBOMs, CVE scanning and
+supply-chain hardening actually work - and doing that on a real project I
+care about beats reading about it. A small app is a good place to make the
+mistakes: when the first SBOM turned out to describe the build machine
+instead of the APK and produced 75 CVE findings for libraries that never
+ship, that was a lesson, not an incident.
+
+So treat what follows as a deliberately over-engineered exercise. It is
+still all true - it just protects rather less than the effort suggests.
+
+## What is actually at stake
+
+The app has **no internet permission**, no accounts, no server and no
 telemetry - everything stays on the phone, and history only leaves it when
 someone deliberately exports it. That removes most of what would normally
 be a security concern here.
