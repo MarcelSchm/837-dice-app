@@ -100,7 +100,7 @@ jobs:
       # versions and purls. Shipped with the release so it is always possible
       # to answer "was this app affected by CVE-X?" after the fact.
       - name: Generate SBOM (CycloneDX)
-        run: ./gradlew cyclonedxBom
+        run: ./gradlew :app:cyclonedxDirectBom
 
       - name: Collect release files
         run: |
@@ -109,7 +109,7 @@ jobs:
              "837-dice-${VERSION}-${GITHUB_SHA::7}.apk"
           cp wear/build/outputs/apk/release/wear-release.apk \
              "837-dice-wear-${VERSION}-${GITHUB_SHA::7}.apk"
-          cp build/reports/cyclonedx/bom.json \
+          cp app/build/reports/cyclonedx-direct/bom.json \
              "837-dice-${VERSION}-sbom.cdx.json"
 
       - name: Upload APKs and SBOM as artifact
@@ -128,7 +128,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: sbom
-          path: build/reports/cyclonedx/bom.json
+          path: app/build/reports/cyclonedx-direct/bom.json
           retention-days: 90
 
       # Known vulnerabilities in what we actually ship. Reported, not
@@ -139,7 +139,7 @@ jobs:
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: sbom
-          scan-ref: build/reports/cyclonedx/bom.json
+          scan-ref: app/build/reports/cyclonedx-direct/bom.json
           format: table
           output: trivy-report.txt
           severity: HIGH,CRITICAL
@@ -153,7 +153,7 @@ jobs:
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: sbom
-          scan-ref: build/reports/cyclonedx/bom.json
+          scan-ref: app/build/reports/cyclonedx-direct/bom.json
           format: sarif
           output: trivy-results.sarif
           severity: HIGH,CRITICAL

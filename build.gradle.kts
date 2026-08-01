@@ -5,6 +5,6 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.ksp) apply false
-    // Applied here (not "apply false"): produces one SBOM across all modules.
-    alias(libs.plugins.cyclonedx)
+    // The SBOM is produced by :app - see the comment there.
+    alias(libs.plugins.cyclonedx) apply false
 }

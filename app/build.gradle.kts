@@ -4,6 +4,23 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.cyclonedx)
+}
+
+/**
+ * The SBOM lives here rather than in the root project, and lists exactly one
+ * configuration: what the release APK actually contains (`:core` comes along
+ * transitively).
+ *
+ * Aggregating over the whole build instead pulled in Gradle's own tooling -
+ * lint and the annotation processors bring Netty and protobuf with them -
+ * which produced 75 CVE findings for libraries that never reach a phone.
+ * An SBOM that describes the build machine instead of the product is worse
+ * than none: it buries the handful of entries that would actually matter.
+ */
+tasks.withType<org.cyclonedx.gradle.CyclonedxDirectTask>().configureEach {
+    includeConfigs.set(listOf("releaseRuntimeClasspath"))
+    includeBuildEnvironment.set(false)
 }
 
 // The app version is derived from the git tag that triggered the release
