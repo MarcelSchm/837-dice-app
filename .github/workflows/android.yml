@@ -301,5 +301,18 @@ jobs:
       - name: Validate the Gradle wrapper
         uses: gradle/actions/wrapper-validation@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
 
+      # Only what is actually shipped. Unfiltered, this reports the whole
+      # build - including Gradle's plugin classpath, which is why 54
+      # Dependabot alerts turned up against settings.gradle.kts for Netty,
+      # Jackson and Bouncy Castle. None of those are in
+      # `:app:dependencies --configuration releaseRuntimeClasspath`; they
+      # belong to AGP, lint and apksigner and never reach a phone.
+      #
+      # Build tooling still gets updated - Dependabot proposes AGP and
+      # Gradle bumps from the version catalog either way. This only stops
+      # the alert list from being drowned in findings about libraries that
+      # are not in the app.
       - name: Submit dependencies
         uses: gradle/actions/dependency-submission@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+        with:
+          dependency-graph-include-configurations: "^releaseRuntimeClasspath$"
