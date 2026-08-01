@@ -8,6 +8,18 @@ whole bottle of Prosecco. Rules are rules. 🍾
 
 ![Android CI](../../actions/workflows/android.yml/badge.svg)
 
+## 📸 A round at the San Remo
+
+| Home | Line-up | The roll |
+|:---:|:---:|:---:|
+| <img src="docs/screenshots/01-home.png" width="240" alt="Home screen with the countdown to Open Flair"> | <img src="docs/screenshots/02-lineup.png" width="240" alt="Line-up: who sits at the table, in which order"> | <img src="docs/screenshots/03-result.png" width="240" alt="The rolled drink with price and dice"> |
+| Counts down to the next Open Flair - and switches to "day X of Y" once it starts. | Who is at the table today, and in which order. Pre-filled with the last round. | Two rolls: category, then drink. Or shake the phone like a dice cup. |
+
+| The order | Hall of Fame |
+|:---:|:---:|
+| <img src="docs/screenshots/04-order.png" width="240" alt="Grouped order summary with the total"> | <img src="docs/screenshots/05-halloffame.png" width="240" alt="Hall of fame with fun facts"> |
+| Grouped and totalled, ready to read out to the waiter. Tap a line if they are out of it. | Who spends the most, who keeps landing in the same category, who is always there. |
+
 ## 📲 Download the app
 
 - **Recommended:** grab the latest version from
