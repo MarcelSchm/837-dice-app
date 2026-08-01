@@ -3,6 +3,48 @@
 All notable changes to 837 Dice. Generated from
 [Conventional Commits](https://www.conventionalcommits.org) with
 [git-cliff](https://git-cliff.org).
+## [2.9] - 2026-08-01
+
+### 🩹 Fixed
+- Make the SBOM describe the app, not the build machine
+
+### 📚 Documentation
+- Show the app in the README
+- Redo the screenshots with the real group
+- Say plainly why the security tooling is here
+
+### ⚙️ CI
+- Dependabot, SBOM, CVE scan and a tighter workflow
+- Let a workflow propose Gradle wrapper updates, and group the toolchain
+- Drop the redundant wrapper workflow and cap Gradle at 9.5.x
+- Surface the SBOM and CVE findings instead of burying them
+
+### 🧹 Maintenance
+- Bump the actions group with 8 updates
+- Bump actions/checkout in the actions group
+- Bump gradle-wrapper from 8.14.3 to 9.5.1
+- Bump the kotlin group across 1 directory with 6 updates
+- Bump the toolchain group across 1 directory with 7 updates
+- Renormalize gradlew.bat and mark the audio/keystore files binary
+
+### Other
+- Merge pull request #2 from MarcelSchm/dependabot/github_actions/actions-626cb31b68
+
+chore(deps): Bump the actions group with 8 updates
+- Merge pull request #7 from MarcelSchm/dependabot/github_actions/actions-7a5a078ad4
+
+chore(deps): Bump actions/checkout from 4.4.0 to 7.0.1 in the actions group
+- Migrate jvmTarget to the compilerOptions DSL
+- Merge pull request #8 from MarcelSchm/dependabot/gradle/gradle-wrapper-9.5.1
+
+chore(deps): Bump gradle-wrapper from 8.14.3 to 9.5.1
+- Merge pull request #3 from MarcelSchm/dependabot/gradle/kotlin-4760a49799
+
+chore(deps): Bump the kotlin group across 1 directory with 6 updates
+- Declare the Material Icons dependency explicitly
+- Merge pull request #5 from MarcelSchm/dependabot/gradle/toolchain-c49a1a5441
+
+chore(deps): Bump the toolchain group across 1 directory with 7 updates
 ## [2.8] - 2026-07-30
 
 ### 🎲 New
