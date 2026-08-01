@@ -6,7 +6,10 @@ picks the drink - categories with more than 6 drinks use two dice, and if
 you run off the bottom of the list you keep counting from the top. Can be a
 whole bottle of Prosecco. Rules are rules. 🍾
 
-![Android CI](../../actions/workflows/android.yml/badge.svg)
+[![Android CI](../../actions/workflows/android.yml/badge.svg)](../../actions/workflows/android.yml)
+[![CVE scan](https://img.shields.io/badge/CVE%20scan-Trivy-blue)](../../security/code-scanning)
+[![SBOM](https://img.shields.io/badge/SBOM-CycloneDX-blue)](../../releases/latest)
+[![Security policy](https://img.shields.io/badge/security-policy-blue)](SECURITY.md)
 
 ## 📸 A round at the San Remo
 
@@ -93,6 +96,23 @@ $env:JAVA_HOME = 'C:\Program Files\Android\Android Studio\jbr'
 ```
 
 The debug APK lands in `app/build/outputs/apk/debug/app-debug.apk`.
+
+## 🔐 What's in the app
+
+Every build lists its own ingredients and gets checked against known
+vulnerabilities:
+
+- **SBOM** (CycloneDX): attached to each [release](../../releases/latest)
+  as `*-sbom.cdx.json`, and available as the `sbom` artifact on every CI
+  run - so "which libraries were in this build?" stays answerable later.
+- **CVE scan**: Trivy checks that SBOM on every run; findings land under
+  [Security → Code scanning](../../security/code-scanning) and in the run's
+  job summary.
+- **Dependencies**: Dependabot proposes grouped updates weekly (including
+  the Gradle wrapper), and GitHub's dependency graph covers indirect
+  dependencies too.
+
+Details and how to report something: [SECURITY.md](SECURITY.md).
 
 ## 📚 More
 

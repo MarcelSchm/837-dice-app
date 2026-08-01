@@ -27,6 +27,10 @@ jobs:
   build:
     name: Tests, APK & SBOM
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Only to file the CVE findings under Security -> Code scanning.
+      security-events: write
 
     steps:
       - name: Check out code
@@ -117,6 +121,16 @@ jobs:
             837-dice-*-sbom.cdx.json
           retention-days: 90
 
+      # The SBOM on its own, for every build and not just for tagged
+      # releases - so "what was in the app back then?" stays answerable for
+      # any commit, not only the ones that became a version.
+      - name: Upload the SBOM separately
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sbom
+          path: build/reports/cyclonedx/bom.json
+          retention-days: 90
+
       # Known vulnerabilities in what we actually ship. Reported, not
       # blocking: the app has no internet permission at all, so a CVE in a
       # library is rarely reachable here - but we still want to know.
@@ -131,6 +145,29 @@ jobs:
           severity: HIGH,CRITICAL
           exit-code: "0"
 
+      # Same scan again, but as SARIF for GitHub's Security tab. Two runs
+      # instead of converting, because the table is what a human wants in
+      # the summary and SARIF is what the Security tab wants.
+      - name: Scan the SBOM again for the Security tab (SARIF)
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: sbom
+          scan-ref: build/reports/cyclonedx/bom.json
+          format: sarif
+          output: trivy-results.sarif
+          severity: HIGH,CRITICAL
+          exit-code: "0"
+
+      # Findings land under Security -> Code scanning, with history over
+      # time instead of being buried in one job log.
+      - name: Upload the findings to the Security tab
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@f205ea1c3313d32999d8d6a48b4f6530d4437b38 # v4
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy-sbom
+
       - name: Put the CVE report into the job summary
         if: always()
         run: |
@@ -144,6 +181,9 @@ jobs:
             else
               echo "Nothing found. 🎉"
             fi
+            echo ""
+            echo "SBOM: the \`sbom\` artifact of this run, or"
+            echo "\`*-sbom.cdx.json\` on the release for tagged builds."
           } >> "$GITHUB_STEP_SUMMARY"
 
   release:
